@@ -1,5 +1,6 @@
 const width = window.innerWidth || 900, height = 900;
 const jsonUrl = 'data.json';
+const defaultSize = 4;
 let graph, store;
 let graphFilterList = [];
 
@@ -22,7 +23,6 @@ let node = svg.append("g")
 let simulation = d3.forceSimulation();
 
 d3.json(jsonUrl).then( (g) => {
-  console.log('jsoning');
   graph = g;
   store = Object.assign({}, {}, g);
   updateSimulation();
@@ -30,10 +30,7 @@ d3.json(jsonUrl).then( (g) => {
 
 function updateSimulation() {
 
-  node = node.data(graph.nodes, (d) => {
-    console.log({d});
-    return d.id; 
-  });
+  node = node.data(graph.nodes, (d) => (d.id));
   node.exit().remove();
 
   // tooltip on mouseover
@@ -45,7 +42,7 @@ function updateSimulation() {
 
   let circles = newNode.append("circle")
     .attr("class", function(d) { return d.group } )
-    .attr("r", size(defaultSize))
+    .attr("r", defaultSize)
   // disable dragging for now
     // .call(d3.drag()
     //   .on("start", dragstarted)
@@ -118,7 +115,7 @@ function setupSimulation() {
       .strength(0.001))
     .force("collide", d3.forceCollide()
       .strength(1)
-      .radius(size(defaultSize + 1)) // Acts on the node of the graph (avoid collapsing)
+      .radius(defaultSize) // Acts on the node of the graph (avoid collapsing)
       .iterations(8))
     .force("x", d3.forceX().strength(width < 700 ? .2 * height / width : 0.05)) // Acts as gravity on nodes (display in canvas)
     .force("y", d3.forceY().strength(width < 700 ? .16 * width / height : 0.05))
