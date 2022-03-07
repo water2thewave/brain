@@ -1,19 +1,19 @@
 const width = window.innerWidth || 900, height = 900;
-const jsonUrl = 'graph.json';
+const jsonUrl = 'data.json';
 let graph, store;
 let graphFilterList = [];
 
-let svg = d3.select("knowledge-graph")
+let svg = d3.select("#knowledge-graph")
   .append("svg")
   .attr("width", width)
   .attr("height", height);
 
-let tooltip = d3.select("#graph-kanji")
+let tooltip = d3.select("#knowledge-graph")
   .append("div")
   .attr("class", "tooltip")
   .text("default text to be overridden");
 
-let color = d3.scaleOrdinal(d3.schemeCategory20);
+// let color = d3.scaleOrdinal(d3.schemeCategory20);
 
 let node = svg.append("g")
   .attr("class", "nodes")
@@ -21,38 +21,42 @@ let node = svg.append("g")
 
 let simulation = d3.forceSimulation();
 
-d3.json(jsonUrl, function(error, g) {
-  if (error) throw error;
-
+d3.json(jsonUrl).then( (g) => {
+  console.log('jsoning');
   graph = g;
   store = Object.assign({}, {}, g);
   updateSimulation();
-});
+}).catch(console.error);
 
 function updateSimulation() {
 
-  node = node.data(graph.nodes, (d) => (d.id));
+  node = node.data(graph.nodes, (d) => {
+    console.log({d});
+    return d.id; 
+  });
   node.exit().remove();
 
+  // tooltip on mouseover
   let newNode = node.enter().append("g")
     .attr("class", "node")
-    .on("mouseover", (d) => (tooltip.style("visibility", "visible").text(kanjiLabel(d))))
+    .on("mouseover", (d) => (tooltip.style("visibility", "visible").text(d.word)))
     .on("mousemove", () => (tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px")))
     .on("mouseout", () => (tooltip.style("visibility", "hidden")));
 
   let circles = newNode.append("circle")
     .attr("class", function(d) { return d.group } )
     .attr("r", size(defaultSize))
-    .call(d3.drag()
-      .on("start", dragstarted)
-      .on("drag", dragged)
-      .on("end", dragended));
+  // disable dragging for now
+    // .call(d3.drag()
+    //   .on("start", dragstarted)
+    //   .on("drag", dragged)
+    //   .on("end", dragended));
 
   let nodeName = newNode.append("text")
-    .attr("class", "kanji")
+    // .attr("class", "kanji")
     .attr('x', -8)
     .attr('y', 6)
-    .text((d) => (d.name));
+    .text((d) => (d.word));
 
   let titles = newNode.append("title")
     .text((d) => (d.name));
@@ -87,9 +91,6 @@ function filterSimulation() {
   graph.nodes = store.nodes.filter((n) => !n.isFilteredOut);
 }
 
-function kanjiLabel(d) {
-  return d.name.concat(" - ", d.reading, " - ", d.meaning);
-}
 
 function dragstarted(d) {
   if (!d3.event.active) simulation.alphaTarget(0.3).restart();
