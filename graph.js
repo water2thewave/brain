@@ -1,6 +1,7 @@
 const width = window.innerWidth || 900, height = 900;
 const jsonUrl = 'data.json';
-const defaultSize = 4;
+const defaultSize = 30
+;
 let graph, store;
 let graphFilterList = [];
 
@@ -41,7 +42,7 @@ function updateSimulation() {
     .on("mouseout", () => (tooltip.style("visibility", "hidden")));
 
   let circles = newNode.append("circle")
-    .attr("class", function(d) { return d.group } )
+    .attr("class", "node")
     .attr("r", defaultSize)
   // disable dragging for now
     // .call(d3.drag()
@@ -50,7 +51,7 @@ function updateSimulation() {
     //   .on("end", dragended));
 
   let nodeName = newNode.append("text")
-    // .attr("class", "kanji")
+    .attr("class", "kanji")
     .attr('x', -8)
     .attr('y', 6)
     .text((d) => (d.word));
