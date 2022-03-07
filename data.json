@@ -1,0 +1,27 @@
+{
+  "nodes": [
+    { "id": 1, "word": "web3" },
+    { "id": 2, "word": "d3" },
+    { "id": 3, "word": "graph" },
+    { "id": 4, "word": "pics" },
+    { "id": 5, "word": "pages" },
+    { "id": 6, "word": "words" },
+    { "id": 7, "word": "interact" },
+    { "id": 8, "word": "click node" },
+    { "id": 9, "word": "create node" },
+    { "id": 10, "word": "record path" }
+  ],
+  "links": [
+    { "source": 1, "target": 2 },
+    { "source": 1, "target": 3 },
+    { "source": 3, "target": 4 },
+    { "source": 3, "target": 5 },
+    { "source": 3, "target": 6 },
+
+    { "source": 2, "target": 7 },
+    { "source": 7, "target": 8 },
+    { "source": 7, "target": 9 },
+    { "source": 8, "target": 10 }
+
+  ]
+}
