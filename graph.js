@@ -17,15 +17,8 @@ let tooltip = d3.select("#knowledge-graph")
 
 // let color = d3.scaleOrdinal(d3.schemeCategory20);
 
-let node = svg.append("g")
-  .attr("class", "node")
-  .selectAll("g");
-
-
-let rootNode = node;
-let link;
-
-
+let link = svg.append("g").attr("id", "links").selectAll("g");
+let node = svg.append("g").attr("id", "nodes").selectAll("g");
 
 // initialize link
 
@@ -34,12 +27,13 @@ let simulation = d3.forceSimulation();
 d3.json(jsonUrl).then( (g) => {
   graph = g;
 
-  link = svg
+  link = svg.select("#links")
     .selectAll("line")
     .data(graph.links)
     .enter()
     .append("line")
     .attr("class", "link");
+
   console.log({link});
 
   store = Object.assign({}, {}, g);
