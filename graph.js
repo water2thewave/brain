@@ -21,6 +21,7 @@ let node = svg.append("g")
   .attr("class", "node")
   .selectAll("g");
 
+
 // initialize link
 
 let simulation = d3.forceSimulation();
@@ -125,7 +126,7 @@ function setupSimulation() {
       .id((d) => (d.id))
       .links(graph.links))
     .force("charge", d3.forceManyBodyReuse() // Acts on the node of the graph (attraction of nodes)
-      .strength(0.001))
+      .strength(-800))
     .force("collide", d3.forceCollide()
       .strength(1)
       .radius(defaultSize) // Acts on the node of the graph (avoid collapsing)
