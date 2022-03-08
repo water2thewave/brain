@@ -18,8 +18,10 @@ let tooltip = d3.select("#knowledge-graph")
 // let color = d3.scaleOrdinal(d3.schemeCategory20);
 
 let node = svg.append("g")
-  .attr("class", "nodes")
+  .attr("class", "node")
   .selectAll("g");
+
+// initialize link
 
 let simulation = d3.forceSimulation();
 
@@ -49,6 +51,14 @@ function updateSimulation() {
     //   .on("start", dragstarted)
     //   .on("drag", dragged)
     //   .on("end", dragended));
+  
+  let links = svg
+    .selectAll("line")
+    .data(graph.links)
+    .enter()
+    .append("line")
+    .attr("class", "link");
+  console.log({graph});
 
   let nodeName = newNode.append("text")
     .attr("class", "kanji")
@@ -111,7 +121,9 @@ function setupSimulation() {
   simulation
     .nodes(graph.nodes)
     .force("center", d3.forceCenter().x(width / 2).y(height / 2))
-    .force("link", d3.forceLink()) // Acts on the link of the graph
+    .force("link", d3.forceLink() // Acts on the link of the graph
+      .id((d) => (d.id))
+      .links(graph.links))
     .force("charge", d3.forceManyBodyReuse() // Acts on the node of the graph (attraction of nodes)
       .strength(0.001))
     .force("collide", d3.forceCollide()
