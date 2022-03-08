@@ -22,20 +22,37 @@ let node = svg.append("g")
   .selectAll("g");
 
 
+let rootNode = node;
+let link;
+
+
+
 // initialize link
 
 let simulation = d3.forceSimulation();
 
 d3.json(jsonUrl).then( (g) => {
   graph = g;
+
+  link = svg
+    .selectAll("line")
+    .data(graph.links)
+    .enter()
+    .append("line")
+    .attr("class", "link");
+  console.log({link});
+
   store = Object.assign({}, {}, g);
   updateSimulation();
+
+
 }).catch(console.error);
 
 function updateSimulation() {
 
+  // replace normal node with labeled node
   node = node.data(graph.nodes, (d) => (d.id));
-  node.exit().remove();
+  // node.exit().remove();
 
   // tooltip on mouseover
   let newNode = node.enter().append("g")
@@ -52,14 +69,7 @@ function updateSimulation() {
     //   .on("start", dragstarted)
     //   .on("drag", dragged)
     //   .on("end", dragended));
-  
-  let links = svg
-    .selectAll("line")
-    .data(graph.links)
-    .enter()
-    .append("line")
-    .attr("class", "link");
-  console.log({graph});
+
 
   let nodeName = newNode.append("text")
     .attr("class", "kanji")
@@ -133,10 +143,15 @@ function setupSimulation() {
       .iterations(8))
     .force("x", d3.forceX().strength(width < 700 ? .2 * height / width : 0.05)) // Acts as gravity on nodes (display in canvas)
     .force("y", d3.forceY().strength(width < 700 ? .16 * width / height : 0.05))
-    .on("tick", () => ticked(node));
+    .on("tick", () => ticked(node, link));
 }
 
-function ticked(node) {
+function ticked(node, link) {
   node
     .attr("transform", (d) => "translate(" + d.x + "," + d.y + ")");
+  link
+    .attr("x1", (d) => (d.source.x))
+    .attr("y1", (d) => (d.source.y))
+    .attr("x2", (d) => (d.target.x))
+    .attr("y2", (d) => (d.target.y));
 }
