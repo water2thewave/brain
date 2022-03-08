@@ -17,6 +17,10 @@ let tooltip = d3.select("#knowledge-graph")
 
 // let color = d3.scaleOrdinal(d3.schemeCategory20);
 
+let node = svg.append("g")
+  .attr("class", "node")
+  .selectAll("g");
+
 
 // initialize link
 
@@ -30,13 +34,8 @@ d3.json(jsonUrl).then( (g) => {
 
 function updateSimulation() {
 
-  let node = svg.append("g")
-    .attr("class", "node-graph")
-    .selectAll("g");
-
   node = node.data(graph.nodes, (d) => (d.id));
   node.exit().remove();
-  
 
   // tooltip on mouseover
   let newNode = node.enter().append("g")
@@ -45,7 +44,7 @@ function updateSimulation() {
     .on("mousemove", () => (tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px")))
     .on("mouseout", () => (tooltip.style("visibility", "hidden")));
 
-  let circle = newNode.append("circle")
+  let circles = newNode.append("circle")
     .attr("class", "node")
     .attr("r", defaultSize)
   // disable dragging for now
@@ -54,12 +53,13 @@ function updateSimulation() {
     //   .on("drag", dragged)
     //   .on("end", dragended));
   
-  let link = node
+  let links = svg
     .selectAll("line")
     .data(graph.links)
     .enter()
     .append("line")
-      .attr("class", "link");
+    .attr("class", "link");
+  console.log({graph});
 
   let nodeName = newNode.append("text")
     .attr("class", "kanji")
@@ -72,7 +72,7 @@ function updateSimulation() {
 
   node = node.merge(newNode);
 
-  setupSimulation(node);
+  setupSimulation();
   simulation.alpha(0.3).alphaTarget(0).restart();
 }
 
@@ -118,7 +118,7 @@ function dragended(d) {
   d.fy = null;
 }
 
-function setupSimulation(node) {
+function setupSimulation() {
   simulation
     .nodes(graph.nodes)
     .force("center", d3.forceCenter().x(width / 2).y(height / 2))
