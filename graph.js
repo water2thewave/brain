@@ -46,14 +46,15 @@ function updateSimulation() {
 
   // replace normal node with labeled node
   node = node.data(graph.nodes, (d) => (d.id));
-  // node.exit().remove();
+  node.exit().remove();
 
   // tooltip on mouseover
   let newNode = node.enter().append("g")
     .attr("class", "node")
     .on("mouseover", (d) => (tooltip.style("visibility", "visible").text(d.word)))
     .on("mousemove", () => (tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px")))
-    .on("mouseout", () => (tooltip.style("visibility", "hidden")));
+    .on("mouseout", () => (tooltip.style("visibility", "hidden")))
+    .on("click", (e,d) => (handleNodeClick(e,d)));
 
   let circles = newNode.append("circle")
     .attr("class", "node")
@@ -148,4 +149,8 @@ function ticked(node, link) {
     .attr("y1", (d) => (d.source.y))
     .attr("x2", (d) => (d.target.x))
     .attr("y2", (d) => (d.target.y));
+}
+
+function handleNodeClick(event, d) {
+  console.log(`Clicked "${d.word}"`);
 }
