@@ -1,5 +1,6 @@
 // TODO add a text field to new nodes
-// TODO
+// TODO middle click create node
+// TODO show depth of max 3 levels from left clicked
 
 let width = window.innerWidth || 900, height = window.innerHeight || 900;
 const jsonUrl = 'data.json';
@@ -162,12 +163,15 @@ function ticked(node, link) {
 function handleNodeClick(event, d) {
   event.preventDefault();
 
-  // TODO when we click, w
   const leftClicked = event.button == 0 || 1 == event.button&1;
   const rightClicked = event.button == 2 || 1 == event.button&3;
   if (leftClicked) {
-    console.log(`Left button clicked "${d.word}"`);
-    createNewNode(d);
+    // console.log(`Left button clicked "${d.word}"`);
+    // TODO show max depth of 2
+    bfsUndirectedTraverse({root: d, maxLevel: 2}, (node, level) => {
+      // set brightness to max depth
+      console.log('Traversed ', {node: node.word, id: node.id, level: level, })
+    });
   }
   else if (rightClicked) {
     console.log(`Right button clicked "${d.word}"`);
@@ -218,5 +222,47 @@ function onWindowResize(e) {
     .attr("viewBox", `0 0 ${width} ${height}`);
 
   updateSimulation();
-  console.log({x: w, y:h});
 };
+function bfsUndirectedTraverse(options, func) {
+  // Traverse the graph ignoring starting from root, ignoring link direction.
+  const {root, maxLevel} = options;
+  
+  let level = 0;
+  let node = root;
+
+  let q = [root];
+  let traversed = {};
+  
+  while (q.length > 0 && level <= maxLevel) {
+    // process level by level
+    q.map((n) => {
+      func(n, level); 
+      traversed[n.id] = true;
+    });
+    
+    q.map( (n)
+    
+    
+    let nextLevel = [];
+    q.map((n) => {
+      let neighbors = getNeighborsOf(n);
+      console.log({neighbors});
+      q.push(...neighbors);
+    });
+    
+    q = nextLevel;
+    level += 1;
+  }
+}
+
+function getNeighborsOf(n) {
+  return graph.links.reduce( (neighbors, link) => {
+        let isNeighbor = link.source.id == n.id || link.target.id == n.id;
+        if (isNeighbor) {
+          let neighbor = link.source.id != n.id ? link.source : link.target;
+          console.log({neighbor: neighbor.word});
+          neighbors.push(neighbor);
+        }
+        return neighbors;
+      }, []);
+}
