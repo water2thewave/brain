@@ -152,5 +152,38 @@ function ticked(node, link) {
 }
 
 function handleNodeClick(event, d) {
-  console.log(`Clicked "${d.word}"`);
+  // TODO when we click, w
+  const leftClicked = event.button == 0 || 1 == event.button&1;
+  const middleClicked = event.button == 1 || 1 == event.button&2;
+  const rightClicked = event.button == 2 || 1 == event.button&3;
+
+  if (middleClicked) {
+    console.log(`Middle clicked "${d.word}"`);
+  }
+  else if (leftClicked) {
+    console.log(`Left button clicked "${d.word}"`);
+    createNewNode(d);
+  }
+  else if (rightClicked) {
+    console.log(`Right button clicked "${d.word}"`);
+  }
+  else {
+    console.log(`Some button clicked "${d.word}"`);
+  }
+
+}
+
+function handleClickOutside(event, d) {
+  // when we click outside, we want to create a node
+
+}
+
+function createNewNode(clickedNode) {
+  // TODO create a new node with clickedNode as the source
+
+  const newId = graph.nodes.length;
+  let node = { "id": graph.nodes.length, "word": `newNode #${newId}` };
+  graph.nodes.push(node);
+  
+  updateSimulation();
 }
