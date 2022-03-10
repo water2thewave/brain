@@ -58,15 +58,18 @@ function updateSimulation() {
     .on("mouseout", () => (tooltip.style("visibility", "hidden")))
     .on("mousedown", handleMiddleButton)
     .on("click", (e,d) => (handleNodeClick(e,d)))
-    .on("contextmenu", (e, d) => (e.preventDefault()));
+    // .on("contextmenu", (e, d) => (e.preventDefault()));
 
   let newLink = link.enter()
     .append("line")
     .attr("class", "link");
 
+  console.log({newNodeRadius: newNode.radius});
+  console.log({nodes: graph.nodes});
   let circles = newNode.append("circle")
     .attr("class", "node")
-    .attr("r", defaultSize)
+    .attr("r", newNode.radius || defaultSize);
+    // .style("filter", node.filterValue);
   // disable dragging for now
     // .call(d3.drag()
     //   .on("start", dragstarted)
@@ -168,10 +171,18 @@ function handleNodeClick(event, d) {
   if (leftClicked) {
     // console.log(`Left button clicked "${d.word}"`);
     // TODO show max depth of 2
-    traverse({root: d, maxLevel: 2}, (node, level) => {
+    traverse({root: d}, (node, level) => {
       // set brightness to max depth
-      console.log('Traversed ', {node: node.word, id: node.id, level: level, })
+      const maxLevel = 2;
+      let percentage = level > maxLevel ? 0.001 : level / maxLevel;
+      newRadius = percentage * defaultSize;
+      graph.nodes[node.id-1].radius = newRadius;
+      console.log({id: node.id});
+      console.log({graphNodes: graph.nodes});
+      console.log({name: node.word, newRadius});
+      updateSimulation();
     });
+
   }
   else if (rightClicked) {
     console.log(`Right button clicked "${d.word}"`);
@@ -226,12 +237,11 @@ function onWindowResize(e) {
 
 function traverse(options, callback) {
   // Traverse the graph ignoring starting from root, ignoring link direction.
-  const {root, maxLevel} = options;
+  const {root} = options;
   const level = options.level || 0;
   const visited = options.visited || {};
   
   if (visited[root.id] == true) return;
-  if (level > maxLevel) return;
 
   callback(root, level);
   visited[root.id] = true;
@@ -242,7 +252,6 @@ function traverse(options, callback) {
     let n = q[i];
     traverse({
       root: n, 
-      maxLevel: maxLevel, 
       level: level+1,
       visited: visited 
     }, callback);
