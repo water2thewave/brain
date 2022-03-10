@@ -22,12 +22,29 @@
     body {
       background-color: rgb(8, 32, 77);
     }
+    
+    .svg-container {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%;
+    vertical-align: top;
+    overflow: hidden;
+}
+.svg-content {
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
   </style>
   
 </head>
 <body>
   <h1>Here be elements</h1>
+  <div id="knowledge-graph-container" class="svg-container">
   <div id="knowledge-graph">
+  </div>
   </div>
   
 <script src="https://d3js.org/d3.v7.min.js"></script>

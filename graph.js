@@ -1,14 +1,23 @@
-const width = window.innerWidth || 900, height = 900;
+// TODO add a text field to new nodes
+// TODO
+
+let width = window.innerWidth || 900, height = window.innerHeight || 900;
 const jsonUrl = 'data.json';
-const defaultSize = 30
-;
+const defaultSize = 30;
+
 let graph, store;
 let graphFilterList = [];
 
-let svg = d3.select("#knowledge-graph")
+let svg = d3.select("#knowledge-graph-container")
   .append("svg")
-  .attr("width", width)
-  .attr("height", height);
+  // .attr("width", width)
+  // .attr("height", height)
+  .attr("preserveAspectRatio", "xMinYMin meet")
+  .attr("viewBox", `0 0 ${width} ${height}`)
+  .classed("svg-content", true);
+
+
+window.addEventListener('resize', onWindowResize);
 
 let tooltip = d3.select("#knowledge-graph")
   .append("div")
@@ -197,3 +206,15 @@ function handleMiddleButton(event, clickedNode) {
   event.preventDefault();
   createNewNode(clickedNode);
 }
+
+function onWindowResize(e) {
+  width = window.innerWidth;
+  height = window.innerHeight;
+  svg
+    // .attr("width", width)
+    // .attr("height", height)
+    .attr("viewBox", `0 0 ${width} ${height}`);
+
+  updateSimulation();
+  console.log({x: w, y:h});
+};
