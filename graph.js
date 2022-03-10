@@ -52,8 +52,8 @@ function updateSimulation() {
   // tooltip on mouseover
   let newNode = node.enter().append("g")
     .attr("class", "node")
-    .on("mouseover", (d) => (tooltip.style("visibility", "visible").text(d.word)))
-    .on("mousemove", () => (tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px")))
+    .on("mouseover", (e,d) => (tooltip.style("visibility", "visible").text(d.word)))
+    .on("mousemove", (e,d) => (tooltip.style("top", (e.pageY-10)+"px").style("left",(e.pageX+10)+"px")))
     .on("mouseout", () => (tooltip.style("visibility", "hidden")))
     .on("mousedown", handleMiddleButton)
     .on("click", (e,d) => (handleNodeClick(e,d)))
@@ -185,8 +185,9 @@ function handleClickOutside(event, d) {
 
 function createNewNode(clickedNode) {
   const newId = graph.nodes.length;
+
   let node = { 
-    "id": graph.nodes.length, 
+    "id": newId,
     "word": `newNode #${newId}` 
   };
   let link = { 
@@ -203,6 +204,7 @@ function handleMiddleButton(event, clickedNode) {
   const middleClicked = event.button == 1 || 1 == event.button&2;
   if (!middleClicked) return;
 
+  console.log(`Middle button clicked `);
   event.preventDefault();
   createNewNode(clickedNode);
 }
