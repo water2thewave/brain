@@ -46,6 +46,7 @@ d3.json(jsonUrl).then( (g) => {
 function updateSimulation() {
 
   // replace normal node with labeled node
+  console.log({newSimulatTionNodes: graph.nodes});
   node = node.data(graph.nodes, (d) => (d.id));
   link = link.data(graph.links);
   node.exit().remove();
@@ -64,17 +65,18 @@ function updateSimulation() {
     .append("line")
     .attr("class", "link");
 
-  console.log({newNodeRadius: newNode.radius});
+  console.log({newNodeRadius: node.radius});
   console.log({nodes: graph.nodes});
   let circles = newNode.append("circle")
     .attr("class", "node")
-    .attr("r", newNode.radius || defaultSize);
+    .attr("r", (d) => (d.radius || defaultSize));
     // .style("filter", node.filterValue);
   // disable dragging for now
     // .call(d3.drag()
     //   .on("start", dragstarted)
     //   .on("drag", dragged)
     //   .on("end", dragended));
+    console.log({circles});
 
 
   let nodeName = newNode.append("text")
@@ -143,10 +145,10 @@ function setupSimulation() {
       .id((d) => (d.id))
       .links(graph.links))
     .force("charge", d3.forceManyBodyReuse() // Acts on the node of the graph (attraction of nodes)
-      .strength(-800))
+      .strength((d) => -1*d.radius*20 || -1*defaultSize*20 ))
     .force("collide", d3.forceCollide()
       .strength(1)
-      .radius(defaultSize) // Acts on the node of the graph (avoid collapsing)
+      .radius((d) => d.radius) // Acts on the node of the graph (avoid collapsing)
       .iterations(8))
     .force("x", d3.forceX().strength(width < 700 ? .2 * height / width : 0.05)) // Acts as gravity on nodes (display in canvas)
     .force("y", d3.forceY().strength(width < 700 ? .16 * width / height : 0.05))
@@ -171,17 +173,15 @@ function handleNodeClick(event, d) {
   if (leftClicked) {
     // console.log(`Left button clicked "${d.word}"`);
     // TODO show max depth of 2
-    traverse({root: d}, (node, level) => {
+    traverse({root: d}, (n, level) => {
       // set brightness to max depth
-      const maxLevel = 2;
-      let percentage = level > maxLevel ? 0.001 : level / maxLevel;
-      newRadius = percentage * defaultSize;
-      graph.nodes[node.id-1].radius = newRadius;
-      console.log({id: node.id});
-      console.log({graphNodes: graph.nodes});
-      console.log({name: node.word, newRadius});
-      updateSimulation();
+      const maxLevel = 3;
+      let newRadius = level > maxLevel ? 0 : (1 - (level / maxLevel)) * defaultSize;
+      n.radius = newRadius;
+      console.log({level, word: n.word, radius: newRadius});
     });
+    node.selectAll('circle').attr("r", (d) => (d.radius));
+    updateSimulation();
 
   }
   else if (rightClicked) {
@@ -212,6 +212,7 @@ function createNewNode(clickedNode) {
   graph.nodes.push(node);
   graph.links.push(link)
   
+  console.log({nodes: graph.nodes});
   updateSimulation();
 }
 

@@ -1,5 +1,6 @@
 {
   "nodes": [
+    { "id": 0, "word": "free" },
     { "id": 1, "word": "spellbook" },
     { "id": 2, "word": "knowledge graph" },
     { "id": 3, "word": "graph" },
