@@ -46,13 +46,13 @@ function updateSimulation() {
     .on("mouseover", (d) => (tooltip.style("visibility", "visible").text(d.word)))
     .on("mousemove", () => (tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px")))
     .on("mouseout", () => (tooltip.style("visibility", "hidden")))
-    .on("click", (e,d) => (handleNodeClick(e,d)));
+    .on("mousedown", handleMiddleButton)
+    .on("click", (e,d) => (handleNodeClick(e,d)))
+    .on("contextmenu", (e, d) => (e.preventDefault()));
 
   let newLink = link.enter()
     .append("line")
     .attr("class", "link");
-
-  console.log({link});
 
   let circles = newNode.append("circle")
     .attr("class", "node")
@@ -151,15 +151,12 @@ function ticked(node, link) {
 }
 
 function handleNodeClick(event, d) {
+  event.preventDefault();
+
   // TODO when we click, w
   const leftClicked = event.button == 0 || 1 == event.button&1;
-  const middleClicked = event.button == 1 || 1 == event.button&2;
   const rightClicked = event.button == 2 || 1 == event.button&3;
-
-  if (middleClicked) {
-    console.log(`Middle clicked "${d.word}"`);
-  }
-  else if (leftClicked) {
+  if (leftClicked) {
     console.log(`Left button clicked "${d.word}"`);
     createNewNode(d);
   }
@@ -191,4 +188,12 @@ function createNewNode(clickedNode) {
   graph.links.push(link)
   
   updateSimulation();
+}
+
+function handleMiddleButton(event, clickedNode) {
+  const middleClicked = event.button == 1 || 1 == event.button&2;
+  if (!middleClicked) return;
+
+  event.preventDefault();
+  createNewNode(clickedNode);
 }
