@@ -27,15 +27,6 @@ let simulation = d3.forceSimulation();
 d3.json(jsonUrl).then( (g) => {
   graph = g;
 
-  link = svg.select("#links")
-    .selectAll("line")
-    .data(graph.links)
-    .enter()
-    .append("line")
-    .attr("class", "link");
-
-  console.log({link});
-
   store = Object.assign({}, {}, g);
   updateSimulation();
 
@@ -46,6 +37,7 @@ function updateSimulation() {
 
   // replace normal node with labeled node
   node = node.data(graph.nodes, (d) => (d.id));
+  link = link.data(graph.links);
   node.exit().remove();
 
   // tooltip on mouseover
@@ -55,6 +47,12 @@ function updateSimulation() {
     .on("mousemove", () => (tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px")))
     .on("mouseout", () => (tooltip.style("visibility", "hidden")))
     .on("click", (e,d) => (handleNodeClick(e,d)));
+
+  let newLink = link.enter()
+    .append("line")
+    .attr("class", "link");
+
+  console.log({link});
 
   let circles = newNode.append("circle")
     .attr("class", "node")
@@ -76,6 +74,7 @@ function updateSimulation() {
     .text((d) => (d.name));
 
   node = node.merge(newNode);
+  link = link.merge(newLink);
 
   setupSimulation();
   simulation.alpha(0.3).alphaTarget(0).restart();
@@ -179,11 +178,17 @@ function handleClickOutside(event, d) {
 }
 
 function createNewNode(clickedNode) {
-  // TODO create a new node with clickedNode as the source
-
   const newId = graph.nodes.length;
-  let node = { "id": graph.nodes.length, "word": `newNode #${newId}` };
+  let node = { 
+    "id": graph.nodes.length, 
+    "word": `newNode #${newId}` 
+  };
+  let link = { 
+    "source": clickedNode.id, 
+    "target": newId 
+  };
   graph.nodes.push(node);
+  graph.links.push(link)
   
   updateSimulation();
 }
