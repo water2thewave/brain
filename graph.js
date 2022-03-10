@@ -168,7 +168,7 @@ function handleNodeClick(event, d) {
   if (leftClicked) {
     // console.log(`Left button clicked "${d.word}"`);
     // TODO show max depth of 2
-    bfsUndirectedTraverse({root: d, maxLevel: 2}, (node, level) => {
+    traverse({root: d, maxLevel: 2}, (node, level) => {
       // set brightness to max depth
       console.log('Traversed ', {node: node.word, id: node.id, level: level, })
     });
@@ -223,46 +223,41 @@ function onWindowResize(e) {
 
   updateSimulation();
 };
-function bfsUndirectedTraverse(options, func) {
+
+function traverse(options, callback) {
   // Traverse the graph ignoring starting from root, ignoring link direction.
   const {root, maxLevel} = options;
+  const level = options.level || 0;
+  const visited = options.visited || {};
   
-  let level = 0;
-  let node = root;
+  if (visited[root.id] == true) return;
+  if (level > maxLevel) return;
 
-  let q = [root];
-  let traversed = {};
+  callback(root, level);
+  visited[root.id] = true;
   
-  while (q.length > 0 && level <= maxLevel) {
-    // process level by level
-    q.map((n) => {
-      func(n, level); 
-      traversed[n.id] = true;
-    });
-    
-    q.map( (n)
-    
-    
-    let nextLevel = [];
-    q.map((n) => {
-      let neighbors = getNeighborsOf(n);
-      console.log({neighbors});
-      q.push(...neighbors);
-    });
-    
-    q = nextLevel;
-    level += 1;
+  // DFS
+  let q = getNeighborsOf(root);
+  for (let i in q) {
+    let n = q[i];
+    traverse({
+      root: n, 
+      maxLevel: maxLevel, 
+      level: level+1,
+      visited: visited 
+    }, callback);
   }
 }
 
 function getNeighborsOf(n) {
   return graph.links.reduce( (neighbors, link) => {
-        let isNeighbor = link.source.id == n.id || link.target.id == n.id;
-        if (isNeighbor) {
-          let neighbor = link.source.id != n.id ? link.source : link.target;
-          console.log({neighbor: neighbor.word});
-          neighbors.push(neighbor);
-        }
-        return neighbors;
-      }, []);
+    let isNeighbor = link.source.id == n.id || link.target.id == n.id;
+    if (isNeighbor)
+    {
+      let neighbor = link.source.id != n.id ? link.source : link.target;
+      // console.log({ neighbor: neighbor.word });
+      neighbors.push(neighbor);
+    }
+    return neighbors;
+  }, []);
 }
