@@ -1,14 +1,21 @@
+// TODO Tell a story here
 // TODO add a text field to new nodes
 // TODO middle click create node
 // Use <image> and <foreignObject/> for non-text elements
 // TODO use radius as an integer with a coeff
 
-let width = window.innerWidth || 900, height = window.innerHeight || 900;
 const jsonUrl = 'data.json';
 const defaultSize = 30;
 
-let graph, store;
-let graphFilterList = [];
+var width = window.innerWidth || 900, height = window.innerHeight || 900;
+
+var localStorage = window.localStorage;
+
+var graph; // raw data
+var store;  // store of the svg nodes
+
+
+var graphFilterList = [];
 
 let svg = d3.select("#knowledge-graph-container")
   .append("svg")
@@ -35,14 +42,18 @@ let node = svg.append("g").attr("id", "nodes").selectAll("g");
 
 let simulation = d3.forceSimulation();
 
-d3.json(jsonUrl).then( (g) => {
-  graph = g;
+let loadedJson = localStorage.getItem('wizard');
 
-  store = Object.assign({}, {}, g);
-  updateSimulation();
+if (loadedJson) {
 
+  console.log({loadedJson});
+  updateGraph(loadedJson);
 
-}).catch(console.error);
+} else {
+  d3.json(jsonUrl)
+    .then(updateGraph)
+    .catch(console.error);
+}
 
 function updateSimulation() {
 
@@ -69,7 +80,7 @@ function updateSimulation() {
     .attr("class", "node")
     .attr("r", (d) => (d.radius || defaultSize));
     // .style("filter", node.filterValue);
-  // disable dragging for now
+  // TODO use dragging to make pictures (of dragons!)
     // .call(d3.drag()
     //   .on("start", dragstarted)
     //   .on("drag", dragged)
@@ -153,9 +164,9 @@ function setupSimulation() {
 }
 
 function ticked(node, link) {
-  node
+  node  // move nodegroup to node's position
     .attr("transform", (d) => "translate(" + d.x + "," + d.y + ")");
-  link
+  link  // move links along with whole node
     .attr("x1", (d) => (d.source.x))
     .attr("y1", (d) => (d.source.y))
     .attr("x2", (d) => (d.target.x))
@@ -206,6 +217,8 @@ function createNewNode(clickedNode) {
   };
   graph.nodes.push(node);
   graph.links.push(link)
+  
+  saveToBrowser();
   
   updateSimulation();
 }
@@ -264,4 +277,18 @@ function getNeighborsOf(n) {
     }
     return neighbors;
   }, []);
+}
+
+function saveToBrowser() {
+  // Save to localstorage on each change
+  console.log('saved to localStorage', graph);
+  localStorage.setItem('wizard', JSON.stringify(graph));
+  return Array.prototype.push.apply(this, arguments);
+}
+
+function updateGraph(loadedJson) {
+  graph = JSON.parse(loadedJson);
+  // graph.push = saveToBrowser
+  store = Object.assign({}, {}, g);
+  updateSimulation();
 }
