@@ -1,6 +1,7 @@
 // TODO add a text field to new nodes
 // TODO middle click create node
-// TODO show depth of max 3 levels from left clicked
+// Use <image> and <foreignObject/> for non-text elements
+// TODO use radius as an integer with a coeff
 
 let width = window.innerWidth || 900, height = window.innerHeight || 900;
 const jsonUrl = 'data.json';
@@ -46,7 +47,6 @@ d3.json(jsonUrl).then( (g) => {
 function updateSimulation() {
 
   // replace normal node with labeled node
-  console.log({newSimulatTionNodes: graph.nodes});
   node = node.data(graph.nodes, (d) => (d.id));
   link = link.data(graph.links);
   node.exit().remove();
@@ -65,8 +65,6 @@ function updateSimulation() {
     .append("line")
     .attr("class", "link");
 
-  console.log({newNodeRadius: node.radius});
-  console.log({nodes: graph.nodes});
   let circles = newNode.append("circle")
     .attr("class", "node")
     .attr("r", (d) => (d.radius || defaultSize));
@@ -76,7 +74,6 @@ function updateSimulation() {
     //   .on("start", dragstarted)
     //   .on("drag", dragged)
     //   .on("end", dragended));
-    console.log({circles});
 
 
   let nodeName = newNode.append("text")
@@ -171,14 +168,12 @@ function handleNodeClick(event, d) {
   const leftClicked = event.button == 0 || 1 == event.button&1;
   const rightClicked = event.button == 2 || 1 == event.button&3;
   if (leftClicked) {
-    // console.log(`Left button clicked "${d.word}"`);
     // TODO show max depth of 2
     traverse({root: d}, (n, level) => {
       // set brightness to max depth
       const maxLevel = 3;
       let newRadius = level > maxLevel ? 0 : (1 - (level / maxLevel)) * defaultSize;
       n.radius = newRadius;
-      console.log({level, word: n.word, radius: newRadius});
     });
     node.selectAll('circle').attr("r", (d) => (d.radius));
     updateSimulation();
@@ -212,7 +207,6 @@ function createNewNode(clickedNode) {
   graph.nodes.push(node);
   graph.links.push(link)
   
-  console.log({nodes: graph.nodes});
   updateSimulation();
 }
 
