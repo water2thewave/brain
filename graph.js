@@ -14,7 +14,6 @@ var localStorage = window.localStorage;
 var graph; // raw data
 var store;  // store of the svg nodes
 
-
 var graphFilterList = [];
 
 let svg = d3.select("#knowledge-graph-container")
@@ -42,18 +41,16 @@ let node = svg.append("g").attr("id", "nodes").selectAll("g");
 
 let simulation = d3.forceSimulation();
 
-let loadedJson = localStorage.getItem('wizard');
-
-if (loadedJson) {
-
+loadLocalStorage().then((json) => {
+  console.log(`Loaded json from localstorage`);
   console.log({loadedJson});
   updateGraph(loadedJson);
-
-} else {
+})
+.catch((e) => {       // load default data
   d3.json(jsonUrl)
     .then(updateGraph)
     .catch(console.error);
-}
+});
 
 function updateSimulation() {
 
@@ -291,4 +288,22 @@ function updateGraph(loadedJson) {
   // graph.push = saveToBrowser
   store = Object.assign({}, {}, g);
   updateSimulation();
+}
+
+function loadLocalStorage() {
+ return new Promise((resolve, reject) => {
+  const key = 'wizard';
+  let loadedJson = localStorage.getItem(key);
+   if (!loadedJson) {
+     reject(`Blank json in localstorage for key "${key}"`);
+   }
+   
+   try {
+     resolve(JSON.parse(loadedJson))
+   }
+   catch (e) {
+     console.error({loadedJson})
+     reject(`Invalid json in localstorage for key "${key}"`);
+   }
+ });
 }
