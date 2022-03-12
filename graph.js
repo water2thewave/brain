@@ -1,3 +1,4 @@
+// TODO now I need to edit nodes
 // TODO Tell a story here
 // TODO add a text field to new nodes
 // TODO middle click create node
@@ -100,6 +101,10 @@ function updateSimulation() {
 
   node = node.merge(newNode);
   link = link.merge(newLink);
+
+  // TODO cleanup this textarea update
+  let jsonStr = JSON.stringify(data);
+  $(".edit-json").val(jsonStr);
 
   setupSimulation();
   simulation.alpha(0.3).alphaTarget(0).restart();
@@ -290,13 +295,15 @@ function getNeighborsOf(n) {
 function saveToBrowser() {
   // Save to localstorage on each change
   console.log('saved to localStorage', data);
+  let jsonStr = JSON.stringify(data);
+  localStorage.setItem('wizard', JSON.stringify(data));
   
   // remove gunk before 
-  localStorage.setItem('wizard', JSON.stringify(data));
   // return Array.prototype.push.apply(this, arguments);
 }
 
 function updateGraph(loadedJson) {
+
 
   console.log('Updating graph', loadedJson);
   data = JSON.parse(JSON.stringify(loadedJson)); // deep copy
@@ -304,6 +311,10 @@ function updateGraph(loadedJson) {
   // graph.push = saveToBrowser
   store = Object.assign({}, {}, loadedJson);
   updateSimulation();
+
+  // update textarea
+  let jsonStr = JSON.stringify(data);
+  $(".edit-json").val(jsonStr);
 }
 
 function loadLocalStorage() {
