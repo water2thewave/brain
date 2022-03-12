@@ -9,9 +9,8 @@ const defaultSize = 30;
 
 var width = window.innerWidth || 900, height = window.innerHeight || 900;
 
-var localStorage = window.localStorage;
-
-var graph; // raw data
+var data = {links: [], nodes: []}; // raw data
+var graph; // graph data
 var store;  // store of the svg nodes
 
 var graphFilterList = [];
@@ -41,16 +40,21 @@ let node = svg.append("g").attr("id", "nodes").selectAll("g");
 
 let simulation = d3.forceSimulation();
 
-loadLocalStorage().then((json) => {
-  console.log(`Loaded json from localstorage`);
-  console.log({loadedJson});
-  updateGraph(loadedJson);
-})
-.catch((e) => {       // load default data
-  d3.json(jsonUrl)
-    .then(updateGraph)
-    .catch(console.error);
-});
+loadLocalStorage()
+  .then((obj) => {
+    console.log(`Loaded json from localstorage`);
+    updateGraph(obj);
+  })
+  .catch((e) => {       // load default data
+    console.info(e.message);
+    console.log('Loading default data');
+    d3.json(jsonUrl)
+      .then ((obj) => {
+        updateGraph(obj);
+      })
+      // .then(updateGraph)
+      .catch(console.error);
+  });
 
 function updateSimulation() {
 
@@ -58,6 +62,7 @@ function updateSimulation() {
   node = node.data(graph.nodes, (d) => (d.id));
   link = link.data(graph.links);
   node.exit().remove();
+  // link.exit().remove();
 
   // tooltip on mouseover
   let newNode = node.enter().append("g")
@@ -212,8 +217,14 @@ function createNewNode(clickedNode) {
     "source": clickedNode.id, 
     "target": newId 
   };
+
+  // add to raw data store
+  data.nodes.push({...node}); // push copy
+  data.links.push({...link});
+
   graph.nodes.push(node);
   graph.links.push(link)
+  
   
   saveToBrowser();
   
@@ -278,15 +289,20 @@ function getNeighborsOf(n) {
 
 function saveToBrowser() {
   // Save to localstorage on each change
-  console.log('saved to localStorage', graph);
-  localStorage.setItem('wizard', JSON.stringify(graph));
-  return Array.prototype.push.apply(this, arguments);
+  console.log('saved to localStorage', data);
+  
+  // remove gunk before 
+  localStorage.setItem('wizard', JSON.stringify(data));
+  // return Array.prototype.push.apply(this, arguments);
 }
 
 function updateGraph(loadedJson) {
-  graph = JSON.parse(loadedJson);
+
+  console.log('Updating graph', loadedJson);
+  data = JSON.parse(JSON.stringify(loadedJson)); // deep copy
+  graph = loadedJson
   // graph.push = saveToBrowser
-  store = Object.assign({}, {}, g);
+  store = Object.assign({}, {}, loadedJson);
   updateSimulation();
 }
 
@@ -295,15 +311,16 @@ function loadLocalStorage() {
   const key = 'wizard';
   let loadedJson = localStorage.getItem(key);
    if (!loadedJson) {
-     reject(`Blank json in localstorage for key "${key}"`);
+     throw Error(`Blank json in localstorage for key "${key}"`);
    }
    
    try {
-     resolve(JSON.parse(loadedJson))
+     resolve(JSON.parse(loadedJson));
+    //  console.log({loadedJson});
    }
    catch (e) {
      console.error({loadedJson})
-     reject(`Invalid json in localstorage for key "${key}"`);
+     throw Error(`Invalid json in localstorage for key "${key}"`);
    }
  });
 }
