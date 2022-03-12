@@ -15,8 +15,6 @@ var links = [];
   let link = d3.select("#links").selectAll("g");
   let node = d3.select("#nodes").selectAll("g");
 
-  // let link = svg.append("g").attr("id", "links").selectAll("g");
-  // let node = svg.append("g").attr("id", "nodes").selectAll("g");
 
 let simulation = d3.forceSimulation();
 
@@ -33,7 +31,7 @@ loadLocalStorage()
       .then ((obj) => {
         updateGraph(obj);
         nodes = obj.nodes;
-        links = obj.nodes;
+        links = obj.links;
       })
       // .then(updateGraph)
       .catch(console.error);
@@ -115,8 +113,9 @@ function setupSimulation() {
 
 function ticked(node, link) {
   nodes = nodes;
-  node  // move nodegroup to node's position
-    .attr("transform", (d) => "translate(" + d.x + "," + d.y + ")");
+  links = links;
+  // node  // move nodegroup to node's position
+  //   .attr("transform", (d) => "translate(" + d.x + "," + d.y + ")");
   link  // move links along with whole node
     .attr("x1", (d) => (d.source.x))
     .attr("y1", (d) => (d.source.y))
@@ -276,8 +275,14 @@ function loadLocalStorage() {
 	<h1>Here be elements</h1>
   </div>
 
-  <div id="knowledge-graph-container" class="svg-container">
+  <div id="knowledge-graph-container" class="svg-container graph-bg">
     <svg id="knowledge-graph-svg" class="svg-content" preserveAspectRatio="xMinYMin meet" viewBox="0 0 {width} {height}">
+      <g id="links">
+        {#each links as l}
+            <line x1={l.source.x} y1={l.source.y} x2={l.target.x} y2={l.target.y} class="link"></line>
+        {/each}
+      </g>
+
       <g id="nodes">
         {#each nodes as n}
           <g transform="translate({n.x}, {n.y})" class="node">
@@ -287,7 +292,7 @@ function loadLocalStorage() {
           </g>
         {/each}
       </g>
-      <g id="links"></g>
+
     </svg>
     <div id="knowledge-graph"></div>
   </div>
@@ -305,7 +310,7 @@ function loadLocalStorage() {
 		fill: #226a3c;
 	}
 
-	body {
+	.graph-bg {
 		background-color: rgb(8, 32, 77);
 	}
 	
