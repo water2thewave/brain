@@ -3,12 +3,18 @@
 	export let name;
 
 	import KnowledgeGraph from './KnowledgeGraph.svelte';
+
+	function deleteLocalStorage() {
+		window.localStorage.clear();
+		console.log('Localstorage deleted');
+	}
 </script>
 
 
 <div class="localstorage container">
 	<a class="btn btn-primary delete-localstorage"
 		role="button"
+		on:click={deleteLocalStorage}
 	>Delete localstorage</a>
 
 	<button class="btn btn-primary show-localstorage" type="button" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="lscontent" data-target="#lscontent">
@@ -24,4 +30,5 @@
 	</div>
 </div>
 <KnowledgeGraph width={window.innerWidth} height={window.innerHeight}></KnowledgeGraph>
+
 
