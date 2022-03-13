@@ -11,6 +11,8 @@ var links = [];
 
 $: editModeClass = editMode ? 'edit-mode' : '';
 
+var selectedNode;
+
 var tooltipText = "blank tooltip";
 var tooltipVisibility = "hidden";
 
@@ -64,7 +66,23 @@ function ticked() {
   links = links;
 }
 
+function handleEditNodeClick(event, d) {
+  const leftClicked = event.button == 0 || 1 == event.button&1;
+  const rightClicked = event.button == 2 || 1 == event.button&3;
+  if (leftClicked) {
+    selectedNode = d;
+  }
+  else if (rightClicked) {
+    console.log(`Edit mode: Right button clicked "${d.word}"`);
+  }
+  else {
+    console.log(`Edit mode: Some button clicked "${d.word}"`);
+  }
+}
+
 function handleNodeClick(event, d) {
+  if (editMode) return handleEditNodeClick(event, d);
+
   const leftClicked = event.button == 0 || 1 == event.button&1;
   const rightClicked = event.button == 2 || 1 == event.button&3;
   if (leftClicked) {
@@ -111,14 +129,20 @@ function createNewNode(clickedNode) {
   updateSimulation();
   saveToBrowser(nodes, links);
 }
+function handleEditMiddleButton(event, clickedNode) {
+  console.log(`Edit mode: Middle button clicked`);
+  createNewNode(clickedNode);
+}
 
 function handleMiddleButton(event, clickedNode) {
   const middleClicked = event.button == 1 || 1 == event.button&2;
   if (!middleClicked) return;
 
-  console.log(`Middle button clicked `);
   event.preventDefault();
-  createNewNode(clickedNode);
+
+  if (editMode) return handleEditMiddleButton(event, clickedNode);
+
+  console.log(`Middle button clicked `);
 }
 
 
@@ -217,7 +241,18 @@ function loadLocalStorage() {
             transform="translate({n.x || 0}, {n.y || 50})" class="node">
 
             <circle r={n.radius || defaultSize} class="node"></circle>
+            {#if editMode && selectedNode == n}
+            <foreignObject x="-8" y="6" width="100" height="150">
+              <form on:submit|preventDefault={ () => {
+                saveToBrowser(nodes, links);
+                selectedNode = null;
+              }}>
+                <input bind:value={n.word}/>
+              </form>
+            </foreignObject>
+            {:else}
             <text x="-8" y="6">{n.word}</text>
+            {/if}
             <title>{n.word}</title>
 
           </g>
@@ -241,9 +276,9 @@ function loadLocalStorage() {
 		/* background-color: burlywood; */
 		fill: #226a3c;
 	}
-
+  
   .edit-mode {
-    background-color: #885d00 !important;
+    background-color: rgb(3, 13, 42) !important;
   }
 
 	.graph-bg {

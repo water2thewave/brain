@@ -30,7 +30,7 @@
 	<h1>Here be elements
   <button 
 	on:click={() => (editMode = !editMode)}
-  class="btn btn-outline-warning {editMode ? 'focus active' : ''}" aria-pressed={editMode} data-toggle="button" type="button" 
+  class="btn btn-outline-warning" aria-pressed={editMode} data-toggle="button" type="button" 
     role="button"> ✏️ </button>
 	</h1>
 
