@@ -5,7 +5,6 @@
 	import KnowledgeGraph from './KnowledgeGraph.svelte';
 
 	let editMode = false;
-	let role = 'wizard';
 	let	roles = [];
 	
 	getRoles();
@@ -14,13 +13,15 @@
 		let localStorage = window.localStorage;
 		for ( var i = 0, len = localStorage.length; i < len; ++i ) {
 			// let name = localStorage.getItem( localStorage.key(i) ) ;
-			roles.push(localStorage.key(i));
+			let roleName = localStorage.key(i);
+			if (!roles.includes(roleName)) {
+				roles.push(roleName);
+				roles = roles;
+			}
 		}
 	}
 function saveRole(role, data) {
 	const {nodes, links} = data;
-	console.log({data});
-
 	const saveLinks = links.map((link) => {
 		let {index, source, target} = link;
 		if (source.id) {
@@ -34,15 +35,16 @@ function saveRole(role, data) {
 	// const saveNodes = nodes.map(({id, word}) =>  {id, word});
 	// const saveData = {nodes: saveNodes, links: saveLinks};
 	const saveData = {nodes, links: saveLinks};
-	console.log('saved to localStorage', saveData);
+	console.log('saved to localStorage', role, saveData);
 	let jsonStr = JSON.stringify(saveData);
 	window.localStorage.setItem(role, jsonStr);
 }
 
 	let roleData = {nodes: [], links: []};
 	var selectedRole;
+	const defaultRole = 'wizard';
 
-	loadLocalStorage(role)
+	loadLocalStorage(defaultRole);
 
 	if (!selectedRole) {
 	// console.error(`Invalid json in localstorage for role "${role}"`, roleData);
@@ -51,13 +53,13 @@ function saveRole(role, data) {
 			.then ((obj) => { 
 				roleData = obj;
 				console.log('default data loaded', roleData);
-				saveRole(role, obj);
-				selectedRole = role;
+				selectedRole = defaultRole;
+				saveRole(defaultRole, obj);
 			})
 			.catch(console.error);
 	}
 
-	$: saveRole(role, roleData);
+	// $: saveRole(selectedRole, roleData);
 
 	function deleteLocalStorage() {
 		window.localStorage.clear();
@@ -98,30 +100,40 @@ function saveRole(role, data) {
 	
 	<div class="row">
 		<div class="col">
-		{#each roles as r}
-			<input class="btn btn-primary" type="button" value={r}>
+		{#each roles as roleName}
+			<button class="btn btn-outline-primary {roleName == selectedRole ? 'active' : ''}" type="button" aria-pressed={roleName == selectedRole}
+			on:click={(e) => {
+				loadLocalStorage(roleName);
+			}}>{roleName}</button>
 		{/each}
 		</div>
 	</div>
 	
 	<h1>Here be elements
-			<form on:submit|preventDefault={() => {
-				saveRole(role, roleData);
+			<form on:submit|preventDefault={(e) => {
+				console.log('SAved  role with enter',  );
+				saveRole(selectedRole, roleData);
+				getRoles();
 			}}>
 			<div class="input-group mb-3">
 					<span class="input-group-text" id="basic-addon1">Class</span>
-					<input bind:value={role} type="text" class="form-control" placeholder="{role}" aria-label="Username" aria-describedby="basic-addon1">
+					<input bind:value={selectedRole} type="text" class="form-control" placeholder="{selectedRole}" aria-label="Username" aria-describedby="basic-addon1">
 			</div>
 			</form>
   <button 
-		on:click={() => (editMode = !editMode)}
+		on:click={() => {
+			if (editMode) {
+				saveRole(selectedRole, roleData);
+			}
+			editMode = !editMode;
+		}}
 		class="btn btn-outline-warning" aria-pressed={editMode} data-toggle="button" type="button" 
     role="button"> ✏️ </button>
 	</h1>
 
 	<div class="collapse" id="lscontent">
 		<div class="card cardbody">
-			<label for="edit-json"> {role} </label>
+			<label for="edit-json"> {selectedRole} </label>
 			<textarea class="edit-json"> {JSON.stringify(roleData)} </textarea>
 			<a class="copy-json btn btn-primary"> Copy text </a> 
 		</div>
