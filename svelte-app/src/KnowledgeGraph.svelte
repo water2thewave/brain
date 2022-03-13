@@ -1,25 +1,17 @@
 <script>
-	export let width, height, data;
-  // import * as d3 from "https://cdn.skypack.dev/d3@7";
+	export let width, height;
   import * as d3 from "d3";
-import { prevent_default } from "svelte/internal";
+  import { prevent_default } from "svelte/internal";
 
   const jsonUrl = 'data.json';
   const defaultSize = 30;
 
-data = data || {links: [], nodes: []}; // raw data
 var nodes = [];
 var links = [];
 var tooltipText = "blank tooltip";
 var tooltipVisibility = "hidden";
 
-  let link = d3.select("#links").selectAll("g");
-  let node = d3.select("#nodes").selectAll("g");
-
-
-// $: d = d3.select('#nodes').selectAll('g').on("click", (e,d) => (handleNodeClick(e,d)));
-
-let simulation = d3.forceSimulation();
+var simulation = d3.forceSimulation();
 
 loadLocalStorage()
   .then((obj) => {
@@ -198,9 +190,7 @@ function loadLocalStorage() {
  });
 }
 
-    // .on("mouseover", (e,d) => 
     // .on("mousemove", (e,d) => (tooltip.style("top", (e.pageY-10)+"px").style("left",(e.pageX+10)+"px")))
-    // .on("mouseout", () => (tooltip.style("visibility", "hidden")))
 </script>
 
 <div class="container">
