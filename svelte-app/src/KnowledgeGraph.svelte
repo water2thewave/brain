@@ -1,5 +1,5 @@
 <script>
-	export let width, height;
+	export let width, height, editMode;
   import * as d3 from "d3";
   import { prevent_default } from "svelte/internal";
 
@@ -8,6 +8,9 @@
 
 var nodes = [];
 var links = [];
+
+$: editModeClass = editMode ? 'edit-mode' : '';
+
 var tooltipText = "blank tooltip";
 var tooltipVisibility = "hidden";
 
@@ -72,7 +75,6 @@ function handleNodeClick(event, d) {
       let newRadius = level > maxLevel ? 0 : (1 - (level / maxLevel)) * defaultSize;
       n.radius = newRadius;
     });
-    node.selectAll('circle').attr("r", (d) => (d.radius));
     updateSimulation();
 
   }
@@ -194,12 +196,12 @@ function loadLocalStorage() {
 </script>
 
 <div class="container">
-	<h1>Here be elements {tooltipText}</h1>
-  <div visibility={tooltipVisibility} class="tooltip">{tooltipText}</div>
   </div>
 
-  <div id="knowledge-graph-container" class="svg-container graph-bg">
+  <div id="knowledge-graph-container" class="svg-container graph-bg {editModeClass}">
     <svg id="knowledge-graph-svg" class="svg-content" preserveAspectRatio="xMinYMin meet" viewBox="0 0 {width} {height}">
+      <rectangle>
+      </rectangle>
       <g id="links">
         {#each links as l}
             <line x1={l.source.x} y1={l.source.y} x2={l.target.x} y2={l.target.y} class="link">
@@ -207,11 +209,9 @@ function loadLocalStorage() {
         {/each}
       </g>
 
-      <g id="nodes">
+      <g id="nodes" data-toggle="tooltip" title={tooltipText}>
         {#each nodes as n}
           <g on:click|preventDefault={(e) => handleNodeClick(e,n)}
-            on:mouseover={(e) => { tooltipVisibility = "visible"; tooltipText = n.word;}}
-            on:mouseout={(e) => { tooltipVisibility = "hidden"; tooltipText = "";}}
             on:mousedown={(e) => handleMiddleButton(e, n)}
 
             transform="translate({n.x || 0}, {n.y || 50})" class="node">
@@ -234,12 +234,17 @@ function loadLocalStorage() {
 		/* background-color: burlywood; */
 		fill: #563478;
 	}
+  
 
 	.link {
 		stroke: #226a3c;;
 		/* background-color: burlywood; */
 		fill: #226a3c;
 	}
+
+  .edit-mode {
+    background-color: #885d00 !important;
+  }
 
 	.graph-bg {
 		background-color: rgb(8, 32, 77);

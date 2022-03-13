@@ -4,23 +4,35 @@
 
 	import KnowledgeGraph from './KnowledgeGraph.svelte';
 
+	let editMode = false;
+
 	const role = 'wizard';
 	function deleteLocalStorage() {
 		window.localStorage.clear();
 		console.log('Localstorage deleted');
 	}
+
 </script>
 
 
 <div class="localstorage container">
-	<a class="btn btn-primary delete-localstorage"
+	<button class="btn btn-primary delete-localstorage"
 		role="button"
-		on:click={deleteLocalStorage}
-	>Delete localstorage</a>
+		on:click={deleteLocalStorage}>
+		Delete localstorage</button>
 
-	<button class="btn btn-primary show-localstorage" type="button" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="lscontent" data-target="#lscontent">
+	<button 
+	class="btn btn-primary show-localstorage" type="button" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="lscontent" data-target="#lscontent">
+
 		Show localstorage
 	</button>
+	
+	<h1>Here be elements
+  <button 
+	on:click={() => (editMode = !editMode)}
+  class="btn btn-outline-warning {editMode ? 'focus active' : ''}" aria-pressed={editMode} data-toggle="button" type="button" 
+    role="button"> ✏️ </button>
+	</h1>
 
 	<div class="collapse" id="lscontent">
 		<div class="card cardbody">
@@ -30,6 +42,6 @@
 		</div>
 	</div>
 </div>
-<KnowledgeGraph width={window.innerWidth} height={window.innerHeight}></KnowledgeGraph>
+<KnowledgeGraph bind:editMode={editMode} width={window.innerWidth} height={window.innerHeight}></KnowledgeGraph>
 
 
