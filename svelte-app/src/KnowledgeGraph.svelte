@@ -49,13 +49,13 @@ function setupSimulation() {
       .iterations(8))
     .force("x", d3.forceX().strength(width < 700 ? .2 * height / width : 0.05)) // Acts as gravity on nodes (display in canvas)
     .force("y", d3.forceY().strength(width < 700 ? .16 * width / height : 0.05))
-    // .force("link", d3.forceLink() // Acts on the link of the graph
-    //   .id((d) => (d.id))
-    //   .links(links))
-    .on("tick", () => ticked());
+    .force("link", d3.forceLink() // Acts on the link of the graph
+      .id((d) => (d.id))
+      .links(links))
+    .on("tick", () => ticked(node, link));
 }
 
-function ticked() {
+function ticked(node, link) {
   // assigning nodes back to nodes triggers svelte to re-read for bindings
   nodes = nodes;
   links = links;
