@@ -1,13 +1,10 @@
 <script>
-	export let width, height, editMode;
+	export let width, height, editMode, roleData;
   import * as d3 from "d3";
   import { prevent_default } from "svelte/internal";
 
-  const jsonUrl = 'data.json';
   const defaultSize = 30;
 
-var nodes = [];
-var links = [];
 
 $: editModeClass = editMode ? 'edit-mode' : '';
 
@@ -18,26 +15,15 @@ var tooltipVisibility = "hidden";
 
 var simulation = d3.forceSimulation();
 
-loadLocalStorage()
-  .then((obj) => {
-    console.log(`Loaded json from localstorage`, obj);
-    nodes = obj.nodes;
-    links = obj.links;
-  })
-  .catch((e) => {       // load default data
-    console.info(e.message);
-    console.log('Loading default data');
-    d3.json(jsonUrl)
-      .then ((obj) => {
-        nodes = obj.nodes;
-        links = obj.links;
-        updateSimulation();
-      })
-      .catch(console.error);
-  })
-  .finally( () => updateSimulation());
+var nodes = [];
+var links = []; 
+$: nodes = roleData.nodes;
+$: links = roleData.links;
+console.log({roleData});
 
-function updateSimulation() {
+$: setupSimulation(nodes, links);
+
+function updateSimulation(nodes, links) {
   setupSimulation();
   simulation.alpha(0.3).alphaTarget(0).restart();
 }
@@ -62,8 +48,8 @@ function setupSimulation() {
 
 function ticked() {
   // assigning nodes back to nodes triggers svelte to re-read for bindings
-  nodes = nodes;
-  links = links;
+  nodes = roleData.nodes;
+  links = roleData.links;
 }
 
 function handleEditNodeClick(event, d) {
@@ -123,11 +109,12 @@ function createNewNode(clickedNode) {
     "target": newId 
   };
 
-  nodes.push({...node});
-  links.push({...link});
+  roleData.nodes.push({...node});
+  roleData.links.push({...link});
   
   updateSimulation();
-  saveToBrowser(nodes, links);
+  // saveToBrowser(nodes, links);
+  // TODO fire onChange
 }
 function handleEditMiddleButton(event, clickedNode) {
   console.log(`Edit mode: Middle button clicked`);
@@ -182,39 +169,8 @@ function getNeighborsOf(n) {
   }, []);
 }
 
-function saveToBrowser(nodes, links) {
-  // Save to localstorage on each change
-  const saveLinks = links.map((link) => {
-    let {index, source, target} = link;
-    return {source: source.id, target: target.id};
-  });
-  // const saveNodes = nodes.map(({id, word}) =>  {id, word});
-  // const saveData = {nodes: saveNodes, links: saveLinks};
-  const saveData = {nodes, links: saveLinks};
-  console.log('saved to localStorage', saveData);
-  let jsonStr = JSON.stringify(saveData);
-  localStorage.setItem('wizard', jsonStr);
-}
 
 
-function loadLocalStorage() {
- return new Promise((resolve, reject) => {
-  const key = 'wizard';
-  let loadedJson = localStorage.getItem(key);
-   if (!loadedJson) {
-     throw Error(`Blank json in localstorage for key "${key}"`);
-   }
-   
-   try {
-     resolve(JSON.parse(loadedJson));
-    //  console.log({loadedJson});
-   }
-   catch (e) {
-     console.error({loadedJson})
-     throw Error(`Invalid json in localstorage for key "${key}"`);
-   }
- });
-}
 
     // .on("mousemove", (e,d) => (tooltip.style("top", (e.pageY-10)+"px").style("left",(e.pageX+10)+"px")))
 </script>
@@ -244,7 +200,7 @@ function loadLocalStorage() {
             {#if editMode && selectedNode == n}
             <foreignObject x="-8" y="6" width="100" height="150">
               <form on:submit|preventDefault={ () => {
-                saveToBrowser(nodes, links);
+                // saveToBrowser(nodes, links);
                 selectedNode = null;
               }}>
                 <input bind:value={n.word}/>
