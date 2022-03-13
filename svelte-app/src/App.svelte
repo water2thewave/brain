@@ -4,6 +4,7 @@
 
 	import KnowledgeGraph from './KnowledgeGraph.svelte';
 
+	const role = 'wizard';
 	function deleteLocalStorage() {
 		window.localStorage.clear();
 		console.log('Localstorage deleted');
@@ -23,8 +24,8 @@
 
 	<div class="collapse" id="lscontent">
 		<div class="card cardbody">
-			<label for="edit-json"> 'wizard' </label>
-			<textarea class="edit-json"> dummy </textarea>
+			<label for="edit-json"> {role} </label>
+			<textarea class="edit-json"> {window.localStorage.getItem(role)} </textarea>
 			<a class="copy-json btn btn-primary"> Copy text </a> 
 		</div>
 	</div>

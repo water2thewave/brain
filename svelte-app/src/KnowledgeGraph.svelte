@@ -52,10 +52,10 @@ function setupSimulation() {
     .force("link", d3.forceLink() // Acts on the link of the graph
       .id((d) => (d.id))
       .links(links))
-    .on("tick", () => ticked(node, link));
+    .on("tick", () => ticked());
 }
 
-function ticked(node, link) {
+function ticked() {
   // assigning nodes back to nodes triggers svelte to re-read for bindings
   nodes = nodes;
   links = links;
@@ -202,7 +202,8 @@ function loadLocalStorage() {
     <svg id="knowledge-graph-svg" class="svg-content" preserveAspectRatio="xMinYMin meet" viewBox="0 0 {width} {height}">
       <g id="links">
         {#each links as l}
-            <line x1={l.source.x} y1={l.source.y} x2={l.target.x} y2={l.target.y} class="link"></line>
+            <line x1={l.source.x} y1={l.source.y} x2={l.target.x} y2={l.target.y} class="link">
+            </line>
         {/each}
       </g>
 
