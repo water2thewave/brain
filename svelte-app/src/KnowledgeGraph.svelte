@@ -8,8 +8,6 @@ import { prevent_default } from "svelte/internal";
   const defaultSize = 30;
 
 data = data || {links: [], nodes: []}; // raw data
-var graph; // graph data
-var store;  // store of the svg nodes
 var nodes = [];
 var links = [];
 var tooltipText = "blank tooltip";
@@ -25,35 +23,31 @@ let simulation = d3.forceSimulation();
 
 loadLocalStorage()
   .then((obj) => {
-    console.log(`Loaded json from localstorage`);
+    console.log(`Loaded json from localstorage`, obj);
     nodes = obj.nodes;
     links = obj.links;
-    updateGraph(obj);
   })
   .catch((e) => {       // load default data
     console.info(e.message);
     console.log('Loading default data');
     d3.json(jsonUrl)
       .then ((obj) => {
-        updateGraph(obj);
         nodes = obj.nodes;
         links = obj.links;
+        updateSimulation();
       })
-      // .then(updateGraph)
       .catch(console.error);
-  });
+  })
+  .finally( () => updateSimulation());
 
 function updateSimulation() {
   setupSimulation();
   simulation.alpha(0.3).alphaTarget(0).restart();
 }
 
-
-
-
 function setupSimulation() {
   simulation
-    .nodes(graph.nodes)
+    .nodes(nodes)
     .force("center", d3.forceCenter().x(width / 2).y(height / 2))
     .force("charge", d3.forceManyBody() // Acts on the node of the graph (attraction of nodes)
       .strength((d) => -1*d.radius*20 || -1*defaultSize*20 ))
@@ -65,7 +59,7 @@ function setupSimulation() {
     .force("y", d3.forceY().strength(width < 700 ? .16 * width / height : 0.05))
     .force("link", d3.forceLink() // Acts on the link of the graph
       .id((d) => (d.id))
-      .links(graph.links))
+      .links(links))
     .on("tick", () => ticked(node, link));
 }
 
@@ -111,25 +105,17 @@ function createNewNode(clickedNode) {
     "id": newId,
     "word": `newNode #${newId}` 
   };
+
   let link = { 
     "source": clickedNode.id, 
     "target": newId 
   };
 
-  // add to raw data store
-  // data.nodes.push({...node}); // push copy
-  // data.links.push({...link});
-  
   nodes.push({...node});
   links.push({...link});
-
-  // graph.nodes.push(node);
-  // graph.links.push(link)
-  
-  
-  saveToBrowser();
   
   updateSimulation();
+  saveToBrowser(nodes, links);
 }
 
 function handleMiddleButton(event, clickedNode) {
@@ -166,7 +152,7 @@ function traverse(options, callback) {
 }
 
 function getNeighborsOf(n) {
-  return graph.links.reduce( (neighbors, link) => {
+  return links.reduce( (neighbors, link) => {
     let isNeighbor = link.source.id == n.id || link.target.id == n.id;
     if (isNeighbor)
     {
@@ -178,23 +164,20 @@ function getNeighborsOf(n) {
   }, []);
 }
 
-function saveToBrowser() {
+function saveToBrowser(nodes, links) {
   // Save to localstorage on each change
+  const saveLinks = links.map((link) => {
+    let {index, source, target} = link;
+    return {source: source.id, target: target.id};
+  });
   // const saveNodes = nodes.map(({id, word}) =>  {id, word});
   // const saveData = {nodes: saveNodes, links: saveLinks};
-  const saveData = {nodes, links};
+  const saveData = {nodes, links: saveLinks};
   console.log('saved to localStorage', saveData);
   let jsonStr = JSON.stringify(saveData);
   localStorage.setItem('wizard', jsonStr);
 }
 
-function updateGraph(loadedJson) {
-
-  console.log('Updating graph', loadedJson);
-  graph = loadedJson
-  store = Object.assign({}, {}, loadedJson);
-  updateSimulation();
-}
 
 function loadLocalStorage() {
  return new Promise((resolve, reject) => {
@@ -240,7 +223,7 @@ function loadLocalStorage() {
             on:mouseout={(e) => { tooltipVisibility = "hidden"; tooltipText = "";}}
             on:mousedown={(e) => handleMiddleButton(e, n)}
 
-            transform="translate({n.x}, {n.y})" class="node">
+            transform="translate({n.x || 0}, {n.y || 50})" class="node">
 
             <circle r={n.radius || defaultSize} class="node"></circle>
             <text x="-8" y="6">{n.word}</text>
