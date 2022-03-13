@@ -23,7 +23,6 @@ function saveRole(role, data) {
 
 	const saveLinks = links.map((link) => {
 		let {index, source, target} = link;
-		console.log({link});
 		if (source.id) {
 			let ret = {source: source.id, target: target.id};
 			return ret;
@@ -78,21 +77,6 @@ function saveRole(role, data) {
 
 	}
 
-	function saveToBrowser(nodes, links) {
-		console.log({nodes}, {links});
-		// TODO move this up to applevel
-		// Save to localstorage on each change
-		const saveLinks = links.map((link) => {
-			let {index, source, target} = link;
-			return {source: source.id, target: target.id};
-		});
-		// const saveNodes = nodes.map(({id, word}) =>  {id, word});
-		// const saveData = {nodes: saveNodes, links: saveLinks};
-		const saveData = {nodes, links: saveLinks};
-		console.log('saved to localStorage', saveData);
-		let jsonStr = JSON.stringify(saveData);
-		window.localStorage.setItem(role, jsonStr);
-	}
 
 
 </script>

@@ -50,6 +50,9 @@ function ticked() {
   // assigning nodes back to nodes triggers svelte to re-read for bindings
   nodes = roleData.nodes;
   links = roleData.links;
+
+  roleData.nodes = nodes;
+  roleData.links = links;
 }
 
 function handleEditNodeClick(event, d) {
