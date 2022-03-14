@@ -3,6 +3,7 @@
 	export let name;
 
 	import KnowledgeGraph from './KnowledgeGraph.svelte';
+  import * as d3 from "d3";
 
 	let editMode = false;
 	let	roles = [];
@@ -24,7 +25,7 @@ function saveRole(role, data) {
 	const {nodes, links} = data;
 	const saveLinks = links.map((link) => {
 		let {index, source, target} = link;
-		if ('index' in source) {
+		if (typeof source === 'object' && 'index' in source) {
 			let ret = {source: source.id, target: target.id};
 			console.log({ret});
 			return ret;
