@@ -34,8 +34,12 @@ var drag = d3.drag()
   .on('drag', (e, d) => { handleDragged(e, d) })
   .on('end', handleDragend);
 
+$: nodes && d3.selectAll(`.node-group`).call(drag);
+
 function handleDragStarted(e) {
   console.debug('Drag started');
+  if (!selectedNode) return;
+
   let n = selectedNode;
   newLink = { 
     source: n,
@@ -45,19 +49,18 @@ function handleDragStarted(e) {
   dragMode = true;
 }
 function handleDragged(e, d) {
+  if (!newLink) return; 
+
   // console.log({e});
   newLink.target.x = e.x;
   newLink.target.y = e.y;
 }
 
 function handleDragend(e) {
-  
-  const validLink = 'id' in newLink.target;
-  console.log('newLink', newLink);
+  const validLink = newLink && 'id' in newLink.target;
   if (validLink) {
     newLink.target = dragTarget;
-    console.log('valid link');
-    console.log({links});
+    console.debug('valid link');
     links.push(newLink);
     newLink = null;
     roleData = roleData;
@@ -110,9 +113,8 @@ function handleEditNodeClick(event, d) {
   const rightClicked = event.button == 2 || 1 == event.button&3;
   if (leftClicked) {
     console.debug(`Edit mode: Left button clicked "${d.word}"`);
+    // d3.select(`#node-${d.id}`).call(drag);
     selectedNode = d;
-    
-    d3.select(`#node-${d.id}`).call(drag);
   }
   else if (rightClicked) {
     console.debug(`Edit mode: Right button clicked "${d.word}"`);
@@ -133,10 +135,10 @@ function handleDblCLick(e, n) {
 
 function handleMouseOver(e, n) {
   if (dragMode) {
-    console.log('MouseOver dragmode', n);
+    console.debug('MouseOver dragmode', n);
     n.radius = 20;
     newLink.target.id = n.id;
-    console.log({newLink});
+    console.debug({newLink});
     roleData = roleData;
     dragTarget = n;
   }
@@ -144,7 +146,7 @@ function handleMouseOver(e, n) {
 
 function handleMouseLeft(e, n) {
   if (dragMode) {
-    console.log('mouseleft while in dragmode', e);
+    console.debug('mouseleft while in dragmode', e);
     n.radius = defaultSize;
     delete newLink.target.id;
     delete newLink.target.index;
@@ -241,19 +243,28 @@ function createNewNode(clickedNode) {
   // TODO fire onChange
 }
 function handleEditMiddleButton(event, clickedNode) {
-  console.log(`Edit mode: Middle button clicked`);
+  console.debug(`Edit mode: Middle button clicked`);
+  event.preventDefault();
   createNewNode(clickedNode);
+}
+
+function handleMouseDown(event, clickedNode) {
+  const middleClicked = event.button == 1 || 1 == event.button&2;
+  const leftClicked = event.button == 0 || 0 == event.button&2;
+
+  if (leftClicked) {
+    selectedNode = clickedNode;
+    return;
+  }
+
+  if (editMode) return handleEditMiddleButton(event, clickedNode);
 }
 
 function handleMiddleButton(event, clickedNode) {
   const middleClicked = event.button == 1 || 1 == event.button&2;
   if (!middleClicked) return;
-
   event.preventDefault();
-
-  if (editMode) return handleEditMiddleButton(event, clickedNode);
-
-  console.log(`Middle button clicked `);
+  console.debug(`Middle button clicked `);
 }
 
 
@@ -286,7 +297,6 @@ function getNeighborsOf(n) {
     if (isNeighbor)
     {
       let neighbor = link.source.id != n.id ? link.source : link.target;
-      // console.log({ neighbor: neighbor.word });
       neighbors.push(neighbor);
     }
     return neighbors;
@@ -327,16 +337,14 @@ function getNeighborsOf(n) {
           <g id="node-{n.id}" 
             on:dblclick={(e) => handleDblCLick(e,n)}
             on:click={(e) => handleNodeClick(e,n)}
-            on:mousedown={(e) => handleMiddleButton(e, n)}
+            on:mousedown={(e) => handleMouseDown(e, n)}
             on:mousemove={(e) => handleMouseMove(e, n)}
             on:contextmenu={(e) => handleNodeContextMenu(e, n)}
-            on:dragstart={(e) => handleNodeDragStart(e,n)}
-            on:dragend={(e) => handleNodeDragEnd(e,n)}
             on:mouseover={(e) => handleMouseOver(e, n)}
             on:mouseout={(e) => handleMouseLeft(e, n)}
 
             transform="translate({n.x || 0}, {n.y || 50})" 
-            class="node">
+            class="node node-group">
 
             <circle r={n.radius || defaultSize} 
               class="node"></circle>
