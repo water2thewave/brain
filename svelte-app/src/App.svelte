@@ -24,11 +24,13 @@ function saveRole(role, data) {
 	const {nodes, links} = data;
 	const saveLinks = links.map((link) => {
 		let {index, source, target} = link;
-		if (source.id) {
+		if ('index' in source) {
 			let ret = {source: source.id, target: target.id};
+			console.log({ret});
 			return ret;
 		}
 		else {
+			console.log({link});
 			return link;
 		}
 	});

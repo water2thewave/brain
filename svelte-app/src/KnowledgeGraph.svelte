@@ -10,6 +10,12 @@ $: editModeClass = editMode ? 'edit-mode' : '';
 
 var selectedNode;
 
+var newLink;
+var dragMode;
+var dragTarget;
+
+var renameMode;
+
 var tooltipText = "blank tooltip";
 var tooltipVisibility = "hidden";
 
@@ -22,6 +28,50 @@ $: links = roleData.links;
 console.log({roleData});
 
 $: setupSimulation(nodes, links);
+
+var drag = d3.drag()
+  .on('start', handleDragStarted)
+  .on('drag', (e, d) => { handleDragged(e, d) })
+  .on('end', handleDragend);
+
+function handleDragStarted(e) {
+  console.debug('Drag started');
+  let n = selectedNode;
+  newLink = { 
+    source: n,
+    target: { x: n.x, y: n.y},
+  };
+  
+  dragMode = true;
+}
+function handleDragged(e, d) {
+  // console.log({e});
+  newLink.target.x = e.x;
+  newLink.target.y = e.y;
+}
+
+function handleDragend(e) {
+  
+  const validLink = 'id' in newLink.target;
+  console.log('newLink', newLink);
+  if (validLink) {
+    newLink.target = dragTarget;
+    console.log('valid link');
+    console.log({links});
+    links.push(newLink);
+    newLink = null;
+    roleData = roleData;
+    links = links;
+    updateSimulation();
+  }
+  else {
+    newLink = null;
+  }
+
+  dragMode = false;
+  dragTarget = null;
+  console.debug('Drag ended');
+}
 
 function updateSimulation(nodes, links) {
   setupSimulation();
@@ -59,14 +109,85 @@ function handleEditNodeClick(event, d) {
   const leftClicked = event.button == 0 || 1 == event.button&1;
   const rightClicked = event.button == 2 || 1 == event.button&3;
   if (leftClicked) {
+    console.debug(`Edit mode: Left button clicked "${d.word}"`);
     selectedNode = d;
+    
+    d3.select(`#node-${d.id}`).call(drag);
   }
   else if (rightClicked) {
-    console.log(`Edit mode: Right button clicked "${d.word}"`);
+    console.debug(`Edit mode: Right button clicked "${d.word}"`);
+    deleteNode(node);
   }
-  else {
-    console.log(`Edit mode: Some button clicked "${d.word}"`);
+}
+function handleMouseMove(e, n) {
+  if (dragMode) {
+
   }
+}
+
+function handleDblCLick(e, n) {
+  selectedNode = n;
+  renameMode = true;
+  dragMode = false;
+}
+
+function handleMouseOver(e, n) {
+  if (dragMode) {
+    console.log('MouseOver dragmode', n);
+    n.radius = 20;
+    newLink.target.id = n.id;
+    console.log({newLink});
+    roleData = roleData;
+    dragTarget = n;
+  }
+}
+
+function handleMouseLeft(e, n) {
+  if (dragMode) {
+    console.log('mouseleft while in dragmode', e);
+    n.radius = defaultSize;
+    delete newLink.target.id;
+    delete newLink.target.index;
+    roleData = roleData;
+  }
+}
+
+function handleNodeContextMenu(e, node) {
+  if (editMode) { 
+    e.preventDefault();
+    console.debug('Context menu disabled in edit mode');
+    handleEditRightClick(e,node);
+  } 
+}
+
+function handleEditRightClick(event, node) {
+  // delete node
+  console.log('Deleting node ', node);
+  deleteNode(node);
+}
+
+// delete a node by id
+function deleteNode(node) {
+  // remove node
+  let newNodes = nodes.filter((n) => ( n.id != node.id ));
+  console.debug({oldNodes: nodes, newNodes});
+  
+  // links pointing to and from
+  let newLinks = links.filter((link) => {
+    let {target, source} = link;
+
+    if (target.id) {
+      // collapse d3 node. NOTE need to standardize the data and link nodes
+      target = target.id;
+      source = source.id;
+    }
+    
+    return ! (source == node.id || target == node.id);
+  });
+  
+  roleData.nodes = newNodes;
+  roleData.links = newLinks;
+  updateSimulation();
 }
 
 function handleNodeClick(event, d) {
@@ -178,6 +299,7 @@ function getNeighborsOf(n) {
     // .on("mousemove", (e,d) => (tooltip.style("top", (e.pageY-10)+"px").style("left",(e.pageX+10)+"px")))
 </script>
 
+    
 <div class="container">
   </div>
 
@@ -190,25 +312,46 @@ function getNeighborsOf(n) {
             <line x1={l.source.x} y1={l.source.y} x2={l.target.x} y2={l.target.y} class="link">
             </line>
         {/each}
+        {#if editMode && newLink}
+            <line class="link" 
+              x1={newLink.source.x} 
+              y1={newLink.source.y} 
+              x2={newLink.target.x} 
+              y2={newLink.target.y} >
+            </line>
+        {/if}
       </g>
 
       <g id="nodes" data-toggle="tooltip" title={tooltipText}>
         {#each nodes as n}
-          <g on:click|preventDefault={(e) => handleNodeClick(e,n)}
+          <g id="node-{n.id}" 
+            on:dblclick={(e) => handleDblCLick(e,n)}
+            on:click={(e) => handleNodeClick(e,n)}
             on:mousedown={(e) => handleMiddleButton(e, n)}
+            on:mousemove={(e) => handleMouseMove(e, n)}
+            on:contextmenu={(e) => handleNodeContextMenu(e, n)}
+            on:dragstart={(e) => handleNodeDragStart(e,n)}
+            on:dragend={(e) => handleNodeDragEnd(e,n)}
+            on:mouseover={(e) => handleMouseOver(e, n)}
+            on:mouseout={(e) => handleMouseLeft(e, n)}
 
-            transform="translate({n.x || 0}, {n.y || 50})" class="node">
+            transform="translate({n.x || 0}, {n.y || 50})" 
+            class="node">
 
-            <circle r={n.radius || defaultSize} class="node"></circle>
-            {#if editMode && selectedNode == n}
+            <circle r={n.radius || defaultSize} 
+              class="node"></circle>
+
+            {#if editMode && renameMode && selectedNode == n}
+            <!-- <div class="rename-node">  -->
             <foreignObject x="-8" y="6" width="100" height="150">
               <form on:submit|preventDefault={ () => {
-                // saveToBrowser(nodes, links);
                 selectedNode = null;
+                renameMode = false;
               }}>
                 <input bind:value={n.word}/>
               </form>
             </foreignObject>
+            <!-- </div> -->
             {:else}
             <text x="-8" y="6">{n.word}</text>
             {/if}
