@@ -28,6 +28,7 @@ $: links = roleData.links;
 console.log({roleData});
 
 $: setupSimulation(nodes, links);
+$: editMode || updateSimulation();
 
 var drag = d3.drag()
   .on('start', handleDragStarted)
@@ -69,7 +70,7 @@ function handleDragend(e) {
     newLink = null;
     roleData = roleData;
     links = links;
-    updateSimulation();
+    // updateSimulation();
   }
   else {
     newLink = null;
@@ -170,6 +171,8 @@ function handleNodeContextMenu(e, node) {
 
 function handleEditRightClick(event, node) {
   // delete node
+  if (!node) return;
+
   console.log('Deleting node ', node);
   deleteNode(node);
 }
@@ -228,30 +231,48 @@ function handleClickOutside(event, d) {
 
 }
 
-function createNewNode(clickedNode) {
+function createNewNodeFrom(clickedNode) {
   const newId = nodes.length;
 
   let node = { 
     "id": newId,
     "word": `newNode #${newId}` 
   };
-
+  roleData.nodes.push({...node});
+  
   let link = { 
     "source": clickedNode.id, 
     "target": newId 
   };
-
-  roleData.nodes.push({...node});
   roleData.links.push({...link});
   
   updateSimulation();
-  // saveToBrowser(nodes, links);
-  // TODO fire onChange
+}
+
+function createNewNodeAt(x, y) {
+  const newId = nodes.length;
+
+  let node = { 
+    "id": newId,
+    "word": `newNode #${newId}`,
+    x,y
+  };
+  roleData.nodes.push({...node});
+  roleData = roleData;
+  
+  // updateSimulation();
 }
 function handleEditMiddleButton(event, clickedNode) {
   console.debug(`Edit mode: Middle button clicked`);
   event.preventDefault();
-  createNewNode(clickedNode);
+  
+  if (clickedNode) {
+    console.log('Creating new node from root currently disabled')
+    // createNewNodeFrom(clickedNode);
+  }
+  else {
+    createNewNodeAt(event.offsetX, event.offsetY);
+  }
 }
 
 function handleMouseDown(event, clickedNode) {
@@ -328,6 +349,7 @@ function getNeighborsOf(n) {
   <div id="knowledge-graph-container" class="svg-container graph-bg {editModeClass}">
     <svg 
       on:contextmenu={(e) => handleNodeContextMenu(e)} 
+      on:mousedown={(e) => handleMouseDown(e)}
       id="knowledge-graph-svg" class="svg-content" preserveAspectRatio="xMinYMin meet" viewBox="0 0 {width} {height}">
       <rectangle>
       </rectangle>

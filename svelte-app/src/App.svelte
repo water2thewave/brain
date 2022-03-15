@@ -27,11 +27,9 @@ function saveRole(role, data) {
 		let {index, source, target} = link;
 		if (typeof source === 'object' && 'index' in source) {
 			let ret = {source: source.id, target: target.id};
-			console.log({ret});
 			return ret;
 		}
 		else {
-			console.log({link});
 			return link;
 		}
 	});
