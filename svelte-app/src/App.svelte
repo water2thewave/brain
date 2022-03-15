@@ -10,6 +10,48 @@
 	
 	getRoles();
 
+	let roleData = {nodes: [], links: []};
+	var selectedRole;
+	const defaultRole = 'wizard';
+
+	loadLocalStorage(defaultRole)
+		.then( (loaded) => { 
+			console.log(`Changing class to ${defaultRole}`);
+			selectedRole = defaultRole; 
+			roleData = loaded;
+		})
+		.catch((e) => {
+		// console.error(`Invalid json in localstorage for role "${role}"`, roleData);
+			console.log('Loading default data');
+			d3.json('data.json')
+				.then ((obj) => { 
+					roleData = obj;
+					console.log('default data loaded', roleData);
+					selectedRole = defaultRole;
+					saveRole(defaultRole, obj);
+				})
+				.catch(console.error);
+		});
+
+	function deleteLocalStorage() {
+		window.localStorage.clear();
+		console.log('Localstorage deleted');
+	}
+
+	function loadLocalStorage(role) {
+		return new Promise( (resolve) => {
+			let storedData = window.localStorage.getItem(role);
+			console.log({storedData});
+			if (storedData != null) {
+				resolve(JSON.parse(storedData));
+			}
+			else {
+				// console.log(`Did not class to ${role}`, roleData);
+				throw Error('No data found');
+			}
+		});
+	}
+
 	function getRoles() {
 		let localStorage = window.localStorage;
 		for ( var i = 0, len = localStorage.length; i < len; ++i ) {
@@ -21,18 +63,18 @@
 			}
 		}
 	}
-function saveRole(role, data) {
-	const {nodes, links} = data;
-	const saveLinks = links.map((link) => {
-		let {index, source, target} = link;
-		if (typeof source === 'object' && 'index' in source) {
-			let ret = {source: source.id, target: target.id};
-			return ret;
-		}
-		else {
-			return link;
-		}
-	});
+	function saveRole(role, data) {
+		const {nodes, links} = data;
+		const saveLinks = links.map((link) => {
+			let {index, source, target} = link;
+			if (typeof source === 'object' && 'index' in source) {
+				let ret = {source: source.id, target: target.id};
+				return ret;
+			}
+			else {
+				return link;
+			}
+		});
 	// const saveNodes = nodes.map(({id, word}) =>  {id, word});
 	// const saveData = {nodes: saveNodes, links: saveLinks};
 	const saveData = {nodes, links: saveLinks};
@@ -40,45 +82,6 @@ function saveRole(role, data) {
 	let jsonStr = JSON.stringify(saveData);
 	window.localStorage.setItem(role, jsonStr);
 }
-
-	let roleData = {nodes: [], links: []};
-	var selectedRole;
-	const defaultRole = 'wizard';
-
-	loadLocalStorage(defaultRole);
-
-	if (!selectedRole) {
-	// console.error(`Invalid json in localstorage for role "${role}"`, roleData);
-		console.log('Loading default data');
-		d3.json('data.json')
-			.then ((obj) => { 
-				roleData = obj;
-				console.log('default data loaded', roleData);
-				selectedRole = defaultRole;
-				saveRole(defaultRole, obj);
-			})
-			.catch(console.error);
-	}
-
-	// $: saveRole(selectedRole, roleData);
-
-	function deleteLocalStorage() {
-		window.localStorage.clear();
-		console.log('Localstorage deleted');
-	}
-
-	function loadLocalStorage(role) {
-		let storedData = window.localStorage.getItem(role);
-		if (storedData != null) {
-			console.log(`Changing class to ${role}`);
-			roleData = JSON.parse(storedData);
-			selectedRole = role;
-		}
-		else {
-			console.log(`Did not class to ${role}`, roleData);
-		}
-
-	}
 
 
 
@@ -104,7 +107,7 @@ function saveRole(role, data) {
 		{#each roles as roleName}
 			<button class="btn btn-outline-primary {roleName == selectedRole ? 'active' : ''}" type="button" aria-pressed={roleName == selectedRole}
 			on:click={(e) => {
-				loadLocalStorage(roleName);
+				loadLocalStorage(roleName).then((data) => { roleData = data; selectedRole = roleName; });
 			}}>{roleName}</button>
 		{/each}
 		</div>
@@ -142,5 +145,6 @@ function saveRole(role, data) {
 </div>
 <KnowledgeGraph 
 bind:roleData bind:editMode width={window.innerWidth} height={window.innerHeight}></KnowledgeGraph>
+	
 
 

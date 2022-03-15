@@ -123,7 +123,8 @@ function handleEditNodeClick(event, d) {
   }
   else if (rightClicked) {
     console.debug(`Edit mode: Right button clicked "${d.word}"`);
-    deleteNode(d);
+    // deleteNode(d);
+    // 
   }
 }
 function handleMouseMove(e, n) {
@@ -175,6 +176,7 @@ function handleEditRightClick(event, node) {
 
   console.log('Deleting node ', node);
   deleteNode(node);
+  // updateSimulation();
 }
 
 // delete a node by id
@@ -198,7 +200,6 @@ function deleteNode(node) {
   
   roleData.nodes = newNodes;
   roleData.links = newLinks;
-  updateSimulation();
 }
 
 function handleNodeClick(event, d) {
