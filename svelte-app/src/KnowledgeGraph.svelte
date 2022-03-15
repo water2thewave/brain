@@ -1,5 +1,6 @@
 <script>
-	export let width, height, editMode, roleData;
+	export let width, height, editMode;
+  export let nodes, links;
   import * as d3 from "d3";
   import { prevent_default } from "svelte/internal";
 
@@ -21,11 +22,10 @@ var tooltipVisibility = "hidden";
 
 var simulation = d3.forceSimulation();
 
-var nodes = [];
-var links = []; 
-$: nodes = roleData.nodes;
-$: links = roleData.links;
-console.log({roleData});
+// var nodes = [];
+// var links = []; 
+
+console.log({nodes, links});
 
 $: setupSimulation(nodes, links);
 $: editMode || updateSimulation();
@@ -68,8 +68,8 @@ function handleDragend(e) {
     console.debug('valid link');
     links.push(newLink);
     newLink = null;
-    roleData = roleData;
     links = links;
+    nodes = nodes;
     // updateSimulation();
   }
   else {
@@ -106,11 +106,8 @@ function setupSimulation() {
 
 function ticked() {
   // assigning nodes back to nodes triggers svelte to re-read for bindings
-  nodes = roleData.nodes;
-  links = roleData.links;
-
-  roleData.nodes = nodes;
-  roleData.links = links;
+  nodes = nodes;
+  links = links;
 }
 
 function handleEditNodeClick(event, d) {
@@ -145,7 +142,8 @@ function handleMouseOver(e, n) {
     n.radius = 20;
     newLink.target.id = n.id;
     console.debug({newLink});
-    roleData = roleData;
+    nodes = nodes;
+    links = links;
     dragTarget = n;
   }
 }
@@ -156,7 +154,8 @@ function handleMouseLeft(e, n) {
     n.radius = defaultSize;
     delete newLink.target.id;
     delete newLink.target.index;
-    roleData = roleData;
+    nodes = nodes;
+    links = links;
   }
 }
 
@@ -182,7 +181,7 @@ function handleEditRightClick(event, node) {
 // delete a node by id
 function deleteNode(node) {
   // remove node
-  let newNodes = nodes.filter((n) => ( n.id != node.id ));
+  let newNodes = nodes.filter((n) => ( n.index != node.index ));
   console.debug({oldNodes: nodes, newNodes});
   
   // links pointing to and from
@@ -198,8 +197,8 @@ function deleteNode(node) {
     return ! (source == node.id || target == node.id);
   });
   
-  roleData.nodes = newNodes;
-  roleData.links = newLinks;
+  nodes = newNodes;
+  links = newLinks;
 }
 
 function handleNodeClick(event, d) {
@@ -239,13 +238,13 @@ function createNewNodeFrom(clickedNode) {
     "id": newId,
     "word": `newNode #${newId}` 
   };
-  roleData.nodes.push({...node});
+  nodes.push({...node});
   
   let link = { 
     "source": clickedNode.id, 
     "target": newId 
   };
-  roleData.links.push({...link});
+  links.push({...link});
   
   updateSimulation();
 }
@@ -258,8 +257,9 @@ function createNewNodeAt(x, y) {
     "word": `newNode #${newId}`,
     x,y
   };
-  roleData.nodes.push({...node});
-  roleData = roleData;
+  // nodes.push({...node});
+  nodes.push(node);
+  nodes = nodes;
   
   // updateSimulation();
 }
@@ -270,6 +270,7 @@ function handleEditMiddleButton(event, clickedNode) {
   if (clickedNode) {
     console.log('Creating new node from root currently disabled')
     // createNewNodeFrom(clickedNode);
+
   }
   else {
     createNewNodeAt(event.offsetX, event.offsetY);

@@ -13,6 +13,7 @@
 	let roleData = {nodes: [], links: []};
 	var selectedRole;
 	const defaultRole = 'wizard';
+	console.log({roleData});
 
 	loadLocalStorage(defaultRole)
 		.then( (loaded) => { 
@@ -144,7 +145,8 @@
 	</div>
 </div>
 <KnowledgeGraph 
-bind:roleData bind:editMode width={window.innerWidth} height={window.innerHeight}></KnowledgeGraph>
+bind:nodes={roleData.nodes} bind:links={roleData.links}
+bind:editMode width={window.innerWidth} height={window.innerHeight}></KnowledgeGraph>
 	
 
 
