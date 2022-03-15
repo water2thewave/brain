@@ -9,13 +9,15 @@
 	const defaultRole = 'cosmos';
 	const defaultDataFile = 'cosmos.json';	// loaded for every new role
 
-	let editMode = false;
-	let	roles = ['cosmos', 'wizard'];
-	
+
+	var debugEnabled;
+	var editMode = false;
+	var	roles = ['cosmos', 'wizard'];
+
 	getRoles();
 
 
-	let roleData = {nodes: [], links: []};
+	var roleData = {nodes: [], links: []};
 	var selectedRole;
 	console.log({roles});
 	console.log({roleData});
@@ -39,19 +41,6 @@
 				.catch(console.error);
 		});
 
-		function copyClipboard(roleData) {
-		 /* Copy the text inside the text field */
-		let data = JSON.stringify({
-			nodes: roleData.nodes,
-			links: roleData.links.map(cleanLink)
-		}, null, 2) 
-		navigator.clipboard.writeText(data);
-		}
-
-	function deleteLocalStorage() {
-		window.localStorage.clear();
-		console.log('Localstorage deleted');
-	}
 
 	function loadLocalStorage(role) {
 		return new Promise( (resolve) => {
@@ -108,16 +97,7 @@
 
 <div class="localstorage container">
 	<div class="mt-n1 container">
-	<button class="btn btn-primary delete-localstorage"
-		role="button"
-		on:click={deleteLocalStorage}>
-		Delete localstorage</button>
 
-	<button 
-	class="btn btn-primary show-localstorage" type="button" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="lscontent" data-target="#lscontent">
-
-		Show localstorage
-	</button>
 	</div>
 	
 	<div class="row">
@@ -176,21 +156,22 @@
 		class="btn btn-outline-warning" aria-pressed={editMode} data-toggle="button" type="button" 
     role="button"> ✏️ </button>
 
-		<DebugPanel></DebugPanel>
-	</h1>
+  <button 
+		on:click={() => { debugEnabled = !debugEnabled }}
+		class="btn btn-outline-info" aria-pressed={editMode} data-toggle="button" type="button" 
+    role="button"> ⛏️ </button>
 
-	<div class="collapse" id="lscontent">
-		<div class="card cardbody">
-			<label for="edit-json"> {selectedRole} </label>
-			<textarea class="edit-json"> {JSON.stringify(roleData, null, 2)} </textarea>
-			<a on:click={copyClipboard(roleData)}
-				class="copy-json btn btn-primary"> Copy text </a> 
-		</div>
-	</div>
+	</h1>
+	{#if debugEnabled}
+		<DebugPanel bind:roleData bind:role={selectedRole}> </DebugPanel>
+	{/if}
+
 </div>
-<KnowledgeGraph 
-bind:nodes={roleData.nodes} bind:links={roleData.links}
-bind:editMode width={window.innerWidth} height={window.innerHeight}></KnowledgeGraph>
+<div class="container">
+	<KnowledgeGraph 
+		bind:nodes={roleData.nodes} bind:links={roleData.links}
+		bind:editMode width={window.innerWidth} height={window.innerHeight}></KnowledgeGraph>
+</div>
 	
 
 
