@@ -6,7 +6,8 @@
 	import DebugPanel from './DebugPanel.svelte';
   import * as d3 from "d3";
 
-	const defaultDataFile = 'cosmos.json';
+	const defaultRole = 'cosmos';
+	const defaultDataFile = 'cosmos.json';	// loaded for every new role
 
 	let editMode = false;
 	let	roles = ['cosmos', 'wizard'];
@@ -16,7 +17,6 @@
 
 	let roleData = {nodes: [], links: []};
 	var selectedRole;
-	const defaultRole = 'wizard';
 	console.log({roles});
 	console.log({roleData});
 
@@ -28,7 +28,7 @@
 		})
 		.catch((e) => {
 		// console.error(`Invalid json in localstorage for role "${role}"`, roleData);
-			console.log('Loading default data');
+			console.log(`Loading default data for ${defaultRole}`);
 			d3.json(`${roles[0] || 'data'}.json`)
 				.then ((obj) => { 
 					roleData = obj;
@@ -129,13 +129,21 @@
 					roleData = data; 
 					selectedRole = roleName; 
 				}).catch((e) => {
-						d3.json(defaultDataFile)
-							.then ((obj) => { 
-								roleData = obj;
-								console.log('default data loaded', roleData);
-								selectedRole = roleName;
-								saveRole(roleName, obj);
-							})
+						const roleFile = `${roleName}.json`;
+						let save = (obj) => {
+							roleData = obj;
+							console.log(`Loading from file ${roleName}`, roleData);
+							selectedRole = roleName;
+							saveRole(roleName, obj);
+						};
+
+						// load role from file, use default if missing
+						d3.json(roleFile)
+							.then(save)
+							.catch(e => {
+								d3.json(defaultDataFile)
+									.then(save);
+							});
 				});
 				;}}>{roleName}</button>
 		{/each}
