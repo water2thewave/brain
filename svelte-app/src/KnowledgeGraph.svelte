@@ -37,6 +37,8 @@ var drag = d3.drag()
 $: nodes && d3.selectAll(`.node-group`).call(drag);
 
 function handleDragStarted(e) {
+  if (!editMode) return;
+
   console.debug('Drag started');
   if (!selectedNode) return;
 
@@ -49,6 +51,7 @@ function handleDragStarted(e) {
   dragMode = true;
 }
 function handleDragged(e, d) {
+  if (!editMode) return;
   if (!newLink) return; 
 
   // console.log({e});
@@ -57,6 +60,7 @@ function handleDragged(e, d) {
 }
 
 function handleDragend(e) {
+  if (!editMode) return;
   const validLink = newLink && 'id' in newLink.target;
   if (validLink) {
     newLink.target = dragTarget;
@@ -118,7 +122,7 @@ function handleEditNodeClick(event, d) {
   }
   else if (rightClicked) {
     console.debug(`Edit mode: Right button clicked "${d.word}"`);
-    deleteNode(node);
+    deleteNode(d);
   }
 }
 function handleMouseMove(e, n) {
@@ -158,7 +162,9 @@ function handleNodeContextMenu(e, node) {
   if (editMode) { 
     e.preventDefault();
     console.debug('Context menu disabled in edit mode');
-    handleEditRightClick(e,node);
+    if (node) {
+      // handleEditRightClick(e,node);
+    }
   } 
 }
 
@@ -251,13 +257,19 @@ function handleEditMiddleButton(event, clickedNode) {
 function handleMouseDown(event, clickedNode) {
   const middleClicked = event.button == 1 || 1 == event.button&2;
   const leftClicked = event.button == 0 || 0 == event.button&2;
+  const rightClicked = event.button == 2 || 2 == event.button&2;
 
   if (leftClicked) {
     selectedNode = clickedNode;
     return;
   }
-
-  if (editMode) return handleEditMiddleButton(event, clickedNode);
+  else if (middleClicked && editMode)
+  {
+    return handleEditMiddleButton(event, clickedNode);
+  }
+  else if (rightClicked && editMode) {
+    return handleEditRightClick(event, clickedNode);
+  }
 }
 
 function handleMiddleButton(event, clickedNode) {
@@ -314,7 +326,9 @@ function getNeighborsOf(n) {
   </div>
 
   <div id="knowledge-graph-container" class="svg-container graph-bg {editModeClass}">
-    <svg id="knowledge-graph-svg" class="svg-content" preserveAspectRatio="xMinYMin meet" viewBox="0 0 {width} {height}">
+    <svg 
+      on:contextmenu={(e) => handleNodeContextMenu(e)} 
+      id="knowledge-graph-svg" class="svg-content" preserveAspectRatio="xMinYMin meet" viewBox="0 0 {width} {height}">
       <rectangle>
       </rectangle>
       <g id="links">
@@ -339,7 +353,6 @@ function getNeighborsOf(n) {
             on:click={(e) => handleNodeClick(e,n)}
             on:mousedown={(e) => handleMouseDown(e, n)}
             on:mousemove={(e) => handleMouseMove(e, n)}
-            on:contextmenu={(e) => handleNodeContextMenu(e, n)}
             on:mouseover={(e) => handleMouseOver(e, n)}
             on:mouseout={(e) => handleMouseLeft(e, n)}
 
