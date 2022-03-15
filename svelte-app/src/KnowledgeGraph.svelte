@@ -1,4 +1,5 @@
 <script>
+  // TODO delete links w/ rightlcik
 	export let width, height, editMode;
   export let nodes, links;
   import * as d3 from "d3";
@@ -25,9 +26,10 @@ var simulation = d3.forceSimulation();
 // var nodes = [];
 // var links = []; 
 
-console.log({nodes, links});
 
-$: setupSimulation(nodes, links);
+$: setupSimulation({nodes, links});
+// $: simulation.alpha(0.3).alphaTarget(0).restart();
+
 $: editMode || updateSimulation();
 
 var drag = d3.drag()
@@ -81,11 +83,6 @@ function handleDragend(e) {
   console.debug('Drag ended');
 }
 
-function updateSimulation(nodes, links) {
-  setupSimulation();
-  simulation.alpha(0.3).alphaTarget(0).restart();
-}
-
 function setupSimulation() {
   simulation
     .nodes(nodes)
@@ -102,6 +99,11 @@ function setupSimulation() {
       .id((d) => (d.id))
       .links(links))
     .on("tick", () => ticked());
+}
+
+function updateSimulation() {
+  setupSimulation();
+  simulation.alpha(0.3).alphaTarget(0).restart();
 }
 
 function ticked() {

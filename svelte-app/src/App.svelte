@@ -3,16 +3,21 @@
 	export let name;
 
 	import KnowledgeGraph from './KnowledgeGraph.svelte';
+	import DebugPanel from './DebugPanel.svelte';
   import * as d3 from "d3";
 
+	const defaultDataFile = 'cosmos.json';
+
 	let editMode = false;
-	let	roles = [];
+	let	roles = ['cosmos', 'wizard'];
 	
 	getRoles();
+
 
 	let roleData = {nodes: [], links: []};
 	var selectedRole;
 	const defaultRole = 'wizard';
+	console.log({roles});
 	console.log({roleData});
 
 	loadLocalStorage(defaultRole)
@@ -24,7 +29,7 @@
 		.catch((e) => {
 		// console.error(`Invalid json in localstorage for role "${role}"`, roleData);
 			console.log('Loading default data');
-			d3.json('data.json')
+			d3.json(`${roles[0] || 'data'}.json`)
 				.then ((obj) => { 
 					roleData = obj;
 					console.log('default data loaded', roleData);
@@ -33,6 +38,15 @@
 				})
 				.catch(console.error);
 		});
+
+		function copyClipboard(roleData) {
+		 /* Copy the text inside the text field */
+		let data = JSON.stringify({
+			nodes: roleData.nodes,
+			links: roleData.links.map(cleanLink)
+		}, null, 2) 
+		navigator.clipboard.writeText(data);
+		}
 
 	function deleteLocalStorage() {
 		window.localStorage.clear();
@@ -64,24 +78,27 @@
 			}
 		}
 	}
+			
+	function cleanLink(link) {
+		let {index, source, target} = link;
+		if (typeof source === 'object' && 'index' in source) {
+			let ret = {source: source.id, target: target.id};
+			return ret;
+		}
+		return link;
+	}
+
 	function saveRole(role, data) {
-		const {nodes, links} = data;
-		const saveLinks = links.map((link) => {
-			let {index, source, target} = link;
-			if (typeof source === 'object' && 'index' in source) {
-				let ret = {source: source.id, target: target.id};
-				return ret;
-			}
-			else {
-				return link;
-			}
-		});
+	const {nodes, links} = data;
+	const saveLinks = links.map(cleanLink);
+
 	// const saveNodes = nodes.map(({id, word}) =>  {id, word});
 	// const saveData = {nodes: saveNodes, links: saveLinks};
 	const saveData = {nodes, links: saveLinks};
 	console.log('saved to localStorage', role, saveData);
 	let jsonStr = JSON.stringify(saveData);
 	window.localStorage.setItem(role, jsonStr);
+	getRoles();
 }
 
 
@@ -108,9 +125,25 @@
 		{#each roles as roleName}
 			<button class="btn btn-outline-primary {roleName == selectedRole ? 'active' : ''}" type="button" aria-pressed={roleName == selectedRole}
 			on:click={(e) => {
-				loadLocalStorage(roleName).then((data) => { roleData = data; selectedRole = roleName; });
-			}}>{roleName}</button>
+				loadLocalStorage(roleName).then((data) => { 
+					roleData = data; 
+					selectedRole = roleName; 
+				}).catch((e) => {
+						d3.json(defaultDataFile)
+							.then ((obj) => { 
+								roleData = obj;
+								console.log('default data loaded', roleData);
+								selectedRole = roleName;
+								saveRole(roleName, obj);
+							})
+				});
+				;}}>{roleName}</button>
 		{/each}
+
+			<button class="btn btn-outline-success" type="button" aria-pressed="false"
+			on:click={(e) => {
+				// new role
+			}}>+ Role</button>
 		</div>
 	</div>
 	
@@ -134,13 +167,16 @@
 		}}
 		class="btn btn-outline-warning" aria-pressed={editMode} data-toggle="button" type="button" 
     role="button"> ✏️ </button>
+
+		<DebugPanel></DebugPanel>
 	</h1>
 
 	<div class="collapse" id="lscontent">
 		<div class="card cardbody">
 			<label for="edit-json"> {selectedRole} </label>
-			<textarea class="edit-json"> {JSON.stringify(roleData)} </textarea>
-			<a class="copy-json btn btn-primary"> Copy text </a> 
+			<textarea class="edit-json"> {JSON.stringify(roleData, null, 2)} </textarea>
+			<a on:click={copyClipboard(roleData)}
+				class="copy-json btn btn-primary"> Copy text </a> 
 		</div>
 	</div>
 </div>
